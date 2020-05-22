@@ -1,4 +1,4 @@
-Simple CP2K Fortran Driver that Links to CP2K library and runs a simple simulation.
+Simple CP2K Fortran Driver that Links to CP2K library and runs a path integral simulation.
 It also prints the positions and forces to additional files.
 
 
