@@ -1,0 +1,9 @@
+1000     !nsteps for md run
+1        !how frequent to save/print the positions
+0.1    !dt (for beads) in fs
+3        !dof for system
+cp2k    !location of external forces (model is a calculcated pseudo-potential; cp2k gets them from classical particles from CP2K run)
+1        !model number
+50.0        !temperature for PIMD run
+
+
