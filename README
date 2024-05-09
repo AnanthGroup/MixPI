@@ -1,5 +1,6 @@
 Simple CP2K Fortran Driver that Links to CP2K library and runs a path integral simulation.
-It also prints the positions and forces to additional files.
+It also prints the positions and forces to additional files. 
+The current version (MixPI v1.0-beta) is citable at https://doi.org/10.5281/zenodo.11130634. 
 
 
 COMPILE DRIVER:
