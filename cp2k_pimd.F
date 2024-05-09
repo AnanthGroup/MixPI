@@ -6,91 +6,75 @@
 ! ---------------------------------- !
 ! B. Johnson   12/15/19 ------------ !
 ! ---------------------------------- !
+! Major changes made by B. Johnson - !
+! when CP2K version 9 update. Also - !
+! moved all inter molecule (both --- !
+! classical and RP force calculations!
+! to the CP2K subroutines. --------- !
+! B. Johnson 01/20/23 -------------- !
+! ---------------------------------- !
 
 PROGRAM cp2k_pimd
-use cp2k_run_forces
-use pimd_mod
+use input_setup
+use input_destroy
+use variable_types
+use md_run
 implicit none
 
 integer     ::i,j
-
 integer                               ::irp
+TYPE(path_integral_env)                ::path_integral
+TYPE(classical_type)                   ::classical
+TYPE(md_info)                           ::md
+TYPE(parallel_env)                     ::para_var
 
-! ----------------------------------- !
-! set up CP2K
-write(*,*)' linking to CP2K and creating force environment '
-CALL set_up_cp2k
-! ----------------------------------- !
+integer     :: rate, itime_start, itime_end
 
+include 'mpif.h'
 
 ! ------------------------------------------- !
 !read in MD information from md_run.inp
 !right now you need to confirm that any
 !repeat info is repeated in both the CP2K.inp
 !and md_run.inp
-write(*,*)' read in the MD input '
-CALL read_in_md
+!write(*,*)' read in the MD input '
+!CALL read_in_md(md)
 ! ------------------------------------------- !
-
-
-! ------------------------------------------- !
-!initialize and read in the PI variables
-write(*,*)' initialize the path integral variables '
-CALL pimd_initialize
-! ------------------------------------------- !
-
-
 
 ! ------------------------------------------- !
 !initalize and read in the classical atom 
 !variables.
-write(*,*)' now initalize classical atoms '
-if (trim(md%obtain_force) == 'cp2k') then
-  write(*,*)' GO '
-  CALL classical_atom_initialize
-endif
+!if (trim(md%obtain_force) == 'cp2k') then
+  !write(*,*)' GO '
+  ! ----------------------------------- !
+  ! set up CP2K
+  CALL set_up_cp2k(para_var)
+  if (para_var%my_rank == 0) then
+    CALL system_clock(count_rate=rate)
+    call system_clock(itime_start)
+  endif
 ! ------------------------------------------- !
-
-
+!read in MD information from md_run.inp
+!right now you need to confirm that any
+!repeat info is repeated in both the CP2K.inp
+!and md_run.inp
+  !write(*,*)' read in the MD input '
+  CALL read_in_md(md)
 ! ------------------------------------------- !
-!if initialize, complete a series of mc steps 
-!to initialize the positions of the ring polymer
-!
-!if not, set the initial positions to either
-!the values read in the position files or all
-!beads are initialize at the centroid
-!EDIT NEEDED!!!!!!!!!!!!!!!!!!!!!!!!!
-!Either need to initialize all rp at same time
-!or figure out how only doing one at a time would
-!work....seems like you need to move all of them!!
-if(path_integral%initialize) THEN
-  do irp = 1, path_integral%num_rp
-    CALL initialize_mc
-  enddo
-else
-  do i = 1, path_integral%num_rp
-    ALLOCATE(path_integral%rp(i)%initialized_positions(path_integral%rp(i)%num_beads,md%space_dim))
-    if(path_integral%rp(i)%coord) then
-      do j = 1, path_integral%rp(i)%num_beads
-        path_integral%rp(i)%initialized_positions(j,:) = path_integral%rp(i)%i_position(j,:)
-      enddo
-    else
-      do j = 1, path_integral%rp(i)%num_beads
-        path_integral%rp(i)%initialized_positions(j,:) = path_integral%rp(i)%i_centroid(:)
-      enddo
-    endif
-  enddo
-endif
+  ! ----------------------------------- !
+  CALL cp2k_pimd_initialize(path_integral, classical, md, para_var)
+!else
+!  write(*,*)' this obtain force option is not currently supported '
+!endif
 ! ------------------------------------------- !
-
-
 
 
 ! ------------------------------------------- !
 !call the pimd md routine.
 !this will conduct a MD run for the ring polymer
 !and classical atoms (if present).
-CALL run_md
+write(*,*) 'run_md '
+CALL run_md(classical, path_integral, md, para_var)
 ! ------------------------------------------- !
 
 
@@ -100,23 +84,28 @@ CALL run_md
 ! if used classical atoms, deallocate all required
 ! arrays.
 if (trim(md%obtain_force) == 'cp2k') then
-  CALL classical_atom_destroy
+  CALL classical_atom_destroy(classical)
+  ! ------------------------------------------- !
+  !deallocates all cp2k arrays and removes the 
+  !force_env information.
+    CALL destroy_cp2k
+  ! ------------------------------------------- !
 endif
 ! ------------------------------------------- !
 
 
 ! ------------------------------------------- !
 !deallocates all RP arrays
-call pimd_destory
+call pimd_destroy(path_integral,md)
 ! ------------------------------------------- !
 
+if (para_var%my_rank == 0) then
+  call system_clock(itime_end)
 
-
-! ------------------------------------------- !
-!deallocates all cp2k arrays and removes the 
-!force_env information.
-CALL destroy_cp2k
-! ------------------------------------------- !
+  open(111,file='runtime_info.dat',status="old", position="append")
+    write(111,*)' complete run time is ', itime_end - itime_start, real(itime_end-itime_start)/real(rate)
+  close(111)
+endif
 
 
 END PROGRAM cp2k_pimd 
