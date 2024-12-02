@@ -1,0 +1,5 @@
+ &MOLECULE
+   NMOL            1
+   CONNECTIVITY PSF
+   CONN_FILE_NAME cobalt.psf
+ &END MOLECULE
