@@ -1,0 +1,14 @@
+   &FORCEFIELD
+     &SPLINE
+       EMAX_SPLINE 1.0E15
+       !EMAX_ACCURACY  1.0E002
+       !UNIQUE_SPLINE T
+       !R0_NB 5.0E-005   !4.76259488E-003
+       RCUT_NB [angstrom] 7.0
+       !EPS_SPLINE .006
+     &END SPLINE
+     @INCLUDE 'RP_FF_bond.pot'
+     &NONBONDED
+       @INCLUDE 'RP_FF_nonbond.pot'
+     &END NONBONDED
+   &END FORCEFIELD

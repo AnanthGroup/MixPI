@@ -1,0 +1,114 @@
+ &LENNARD-JONES
+   ATOMS 4OW     4OW
+   EPSILON [K_e]                       19.553372499999998     
+   SIGMA [angstrom]                  3.1699999999999999     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 4OW     32HW
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  2.0850000000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 4OW     OW
+   EPSILON [K_e]                       19.553372499999998     
+   SIGMA [angstrom]                  3.1699999999999999     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 4OW     HW
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  2.0850000000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 4OW     HH
+   EPSILON [K_e]                       9.1160206847615264     
+   SIGMA [angstrom]                  2.8849999999999998     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 4OW     AR
+   EPSILON [K_e]                       23.895760302431263     
+   SIGMA [angstrom]                  3.2850000000000001     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 4OW     NE
+   EPSILON [K_e]                       23.895760302431263     
+   SIGMA [angstrom]                  3.2850000000000001     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 4OW     XX
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  2.8849999999999998     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 4OW     CO
+   EPSILON [K_e]                       57.091159958931030     
+   SIGMA [angstrom]                  3.6520000000000001     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 4OW     CL
+   EPSILON [K_e]                       23.895760302431263     
+   SIGMA [angstrom]                  3.2850000000000001     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 32HW     32HW
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  1.0000000000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 32HW     OW
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  2.0850000000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 32HW     HW
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  1.0000000000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 32HW     HH
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  1.8000000000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 32HW     AR
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  2.2000000000000002     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 32HW     NE
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  2.2000000000000002     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 32HW     XX
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  1.8000000000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 32HW     CO
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  2.5670000000000002     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 32HW     CL
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  2.2000000000000002     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES

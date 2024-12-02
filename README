@@ -1,43 +1,6 @@
 Simple CP2K Fortran Driver that Links to CP2K library and runs a path integral simulation.
 It also prints the positions and forces to additional files. 
-The current version (MixPI v1.0-beta) is citable at https://doi.org/10.5281/zenodo.11130634. 
+The current version (MixPI v1.1) is citable at https://doi.org/10.5281/zenodo.11130634. 
 
 
-COMPILE DRIVER:
-To compile the main driver program:
-make 
-
-Additional options are
-1. make clean to remove all executables and all .o and .mod files
-2. make pimd_mod.o will just compile/update the module file
-
-Additional files/modules can be added. The make file contains comments outlining
-the procedure. The make file links the external driver to the CP2K library. It will
-need to be updated if location of CP2K library changes. 
-In addition, the same versions of gcc/intelmpi need to be loaded for the driver
-as were loaded for the original CP2K library build. (My versions are shown below.)
-
-
-
-
-CREATE AND LINK CP2K LIBRARY
-Below are the instructions for obtaining and linking the CP2K library.
-
-1. Inside cp2k folder, create library with a similar make command used to compile CP2K
-make -j N ARCH=constance-gf-mkl-mvapich VERSION=sopt libcp2k
-NOTES:
-For my build, I used an arch file called constance-gf-mkl-mvapich.sopt (also in this directory 
-for completeness). I had the following modules loaded:
-Currently Loaded Modulefiles:
-  1) intel/16.0.2         2) intelmpi/5.0.2.044   3) gcc/6.1.0            4) mvapich2/2.1         5) python/3.7.2 
-
-
-2. This creates a folder cp2k/lib/constance-gf-mkl-mvapich/sopt/ that contains a list of .a libraries. The relevant cp2k library
-is libcp2k.a. A folder called cp2k/obj/constance-gf-mkl-mvapich/sopt/ is also generated that contains all of the .mod/.o/.F90 
-files for CP2K. For future linking, I also copied the file cp2k/src/start/libcp2k.h into this file.
-These paths are included in the make file as library and include paths.
-
-3. For Fortran links, you also need to link to the dbcsr files. The dbcsr library is location in 
-cp2k/lib/constance-gf-mkl-mvapich/sopt/exts/dbcsr/ and the .mod/.o files are located at 
-cp2k/obj/constance-gf-mkl-mvapich/sopt/exts/dbcsr. These paths are also shown in the make file. 
-
+Additional information can be found in the MixPi User Manual Below.

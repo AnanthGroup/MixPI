@@ -1,0 +1,18 @@
+2000     !nsteps for md run
+100        !how frequent to save/print the positions
+0.5    !dt (for beads) in fs
+pimd
+nvt      !nvt (and then anything else ==) nve
+pileg
+3        !dof for system
+cp2k    !location of external forces (model is a calculcated pseudo-potential; cp2k gets them from classical particles from CP2K run; none is all PI)
+1        !model number
+300.0        !temperature for PIMD run
+normal_manual                       !progagation: indicates which scheme to use in moving the bead: none (single bead), normal (normal mode prop), Cayele
+.true.                             !init_vel_rp: initialize RP velocities from Boltzmann. If .F., read in from file.
+.true.
+500.0
+500.0
+low
+
+
