@@ -491,7 +491,7 @@ open(678, file='final_rp-vel.xyz')
 do irp = 1, path_integral%num_rp
   do j = 1, path_integral%rp(irp)%num_beads
     write(678,'(6f20.15)') path_integral%rp(irp)%p(j,:)/path_integral%rp(irp)%kinetic_mass, &
-      path_integral%rp(irp)%traj(iprint,j,4:6)/(AtoBohr/fstota)
+      path_integral%rp(irp)%p(j,:)/(AtoBohr/fstota)
   enddo
 enddo
 close(678)
@@ -647,7 +647,7 @@ TYPE(path_integral_env)                ::path_integral
 TYPE(classical_type)                   ::classical
 TYPE(md_info)                          ::md
 real(kind=8)                           ::kinetic_virial, extra_term, bead_term, bead_term_local
-integer                                ::nbead, irp, i
+integer                                ::nbead, irp, i, j
 real(kind=8),dimension(md%space_dim)   ::centroid
 
 extra_term = 0.0d0
@@ -660,13 +660,21 @@ do irp = 1, path_integral%num_rp
     centroid(i) = sum(path_integral%rp(irp)%x(:,i))&
     /dble(real(path_integral%rp(irp)%num_beads))
   enddo
-  !write(*,*)' centroid is ', centroid(:)
+  write(*,*)' centroid is ', centroid(:)
+  !do i = 1, nbead
+!	  bead_term_local = bead_term_local + dot_product(path_integral%rp(irp)%x(i,:)-centroid(:),&
+!            (-1.0d0*path_integral%rp(irp)%force(i,:)))
+!	  !write(*,*)' dot product is ', dot_product(path_integral%rp(irp)%x(i,:)-centroid(:),path_integral%rp(irp)%force(i,:))
+!  enddo
   do i = 1, nbead
-	  bead_term_local = bead_term_local + dot_product(path_integral%rp(irp)%x(i,:)-centroid(:),path_integral%rp(irp)%force(i,:))
-	  !write(*,*)' dot product is ', dot_product(path_integral%rp(irp)%x(i,:)-centroid(:),path_integral%rp(irp)%force(i,:))
+    do j = 1, md%space_dim
+      bead_term = bead_term - ((path_integral%rp(irp)%x(i,j)-centroid(j))*&
+            path_integral%rp(irp)%force(i,j))/(2.0d0)  !*dble(real(nbead)))
+    !write(*,*)' dot product is ', dot_product(path_integral%rp(irp)%x(i,:)-centroid(:),path_integral%rp(irp)%force(i,:))
+    enddo
   enddo
   !write(*,*)' bead_term_local is ', bead_term_local
-  bead_term = bead_term + bead_term_local/(2.0d0*dble(real(nbead)))
+  !bead_term = bead_term + bead_term_local/(2.0d0*dble(real(nbead)))
 enddo
 
 !write(*,*)' bead_term is ', bead_term
