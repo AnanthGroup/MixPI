@@ -1,0 +1,44 @@
+&GLOBAL
+  PRINT_LEVEL LOW
+  PREFERRED_FFT_LIBRARY  FFTSG
+  PROJECT water
+  RUN_TYPE MD
+&END GLOBAL
+&FORCE_EVAL
+  METHOD FIST
+  &MM
+   &FORCEFIELD
+    &NONBONDED
+    @INCLUDE "RP_FF_nonbond.pot"
+    &END NONBONDED
+    @INCLUDE "RP_FF_bond.pot"
+    !IGNORE_MISSING_CRITICAL_PARAMS .true.
+    &SPLINE
+        EMAX_SPLINE     1000000
+        RCUT_NB         7.0
+    &END SPLINE
+   &END FORCEFIELD
+    &POISSON
+      &EWALD
+        EWALD_TYPE spme
+        ALPHA .5
+        GMAX 14 14 14
+        O_SPLINE 6
+      &END EWALD
+    &END POISSON
+  &END MM
+  &SUBSYS
+    &CELL
+      ABC 14 14 14
+    &END CELL
+    &TOPOLOGY
+      COORD_FILE_FORMAT   XYZ
+      COORD_FILE_NAME     RP_structure.xyz 
+      CONN_FILE_FORMAT    MOL_SET
+      &MOL_SET
+       @INCLUDE 'RP_molset.pot'
+      &END MOL_SET
+    &END TOPOLOGY
+    @INCLUDE 'RP_type.pot'
+  &END SUBSYS
+&END FORCE_EVAL
