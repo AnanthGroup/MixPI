@@ -1,0 +1,6 @@
+A directory that contains two examples using the MixPI program.
+
+Example 1: Box of water with 91 water molecules in a 14 A box. The water molecules are treated in the MixTS formulism with the hydrogen atoms treated as 32 bead RPs and the oxygen atoms
+treated as 4 bead RPs. The q-SPC/E force-field is used. 
+
+Example 2: A ring-polymer electron (treated as a 1024 bead RP) centered on a Co3+ ion in a box of 90 water molecules in a 14 A box. The Co3+ ion and the water molecules are treated classically.
