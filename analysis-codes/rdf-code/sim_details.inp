@@ -1,0 +1,6 @@
+traj20ps_1.dat                 !trajectory file
+200					!Number of configs in trajectory file
+0					!Number of initial configs to skip from trajectory file
+14.0 14.0 14.0				!Box size
+OW HW     				!Atom 1 and atom 2 label (from trajectory file)
+0.01 14.0				!xmin and xmax for the rdf
