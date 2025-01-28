@@ -1,3 +1,0 @@
-'/people/john708/pimd_cp2k_simple/cp2k_run/zeolite_test/dft_c2h4.inp'       !cp2k_input_file: absolute path to the CP2K input file
-'/people/john708/pimd_cp2k_simple/cp2k_run/zeolite_test/dft_c2h4.out'        !cp2k_output_file: absolute path to where CP2K prints the output
-

@@ -1,6 +1,0 @@
-.true.       !initialze: if you want to initialize the positions of the ring polymer
-.true.       !debug_initialize: if you are initializing the ring polymer, print off steps
-10  !init_nsteps: number of steps in initializing the ring polymer
-1     !init_print_nsteps: how often to save/print the ring polymer positions in the initialize step 
-0.05   !mc_step: step size of the mc moves in the initialization MC routine
-normal_manual   !progagation: indicates which scheme to use in moving the bead: none (single bead), normal (normal mode prop), Cayele
