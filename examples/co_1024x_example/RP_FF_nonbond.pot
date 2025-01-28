@@ -1,0 +1,52 @@
+ &LENNARD-JONES
+   ATOMS 1024XX     1024XX
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  2.6000000000000001     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1024XX     1CO
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  3.3670000000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1024XX     OW
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  2.8849999999999998     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1024XX     HW
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  1.8000000000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1CO     1CO
+   EPSILON [K_e]                       666.76999999999998     
+   SIGMA [angstrom]                  4.1340000000000003     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1CO     OW
+   EPSILON [K_e]                       228.36463983572412     
+   SIGMA [angstrom]                  3.6520000000000001     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1CO     HW
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  2.5670000000000002     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &GENPOT
+         ATOMS 1CO 1024XX
+         FUNCTION (qAqC/rc)* (1+tanh(-200.0*(r-rc)))/2.0 + (qAqC/r)*(1+tanh(200.0*(r-rc)))/2.0
+         PARAMETERS qAqC, rc
+         RMIN [angstrom] 0.0
+         RMAX [angstrom] 7.0
+         UNITS hartree*angstrom angstrom
+         VALUES -0.00292968 1.1
+         VARIABLES r
+ &END GENPOT  

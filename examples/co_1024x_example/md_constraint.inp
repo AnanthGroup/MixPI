@@ -1,0 +1,5 @@
+.false.				! classical atom constraints present (frozen atoms)
+.true.				! PI centroid constraint 
+1					!number of centroid contraints
+2	xyz				!atom number of contraint, degrees of freedom
+.false.				! virtual site (tip4p) constraint

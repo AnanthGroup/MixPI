@@ -1,0 +1,44 @@
+   &FORCEFIELD
+     &SPLINE
+       EMAX_SPLINE 1.0E15
+       !EMAX_ACCURACY  1.0E002
+       UNIQUE_SPLINE T
+       R0_NB 5.0E-005   !4.76259488E-003
+       RCUT_NB [angstrom] 7.0
+       EPS_SPLINE .006
+     &END SPLINE
+     @INCLUDE 'RP_FF_bond.pot'
+     &BEND
+       ATOMS      HW     OW     HW 
+       K          [rad^-2kcalmol] 75.90
+       THETA0     [deg] 113.24
+       KIND   G87
+     &END BEND
+     &BOND
+       ATOMS OW HW
+       K      [angstrom^-2kcalmol] 1059.162 
+       R0     [angstrom] 1.012
+       KIND   G87
+     &END BOND
+     &NONBONDED
+       @INCLUDE 'RP_FF_nonbond.pot'
+       &LENNARD-JONES
+         ATOMS      OW OW
+         EPSILON [K_e]    78.2135
+         SIGMA [angstrom]      3.17
+         RCUT [angstrom]      7.0
+       &END LENNARD-JONES
+       &LENNARD-JONES
+         ATOMS      OW HW
+         EPSILON    0.0
+         SIGMA      0.1
+         RCUT       7.0
+       &END LENNARD-JONES
+       &LENNARD-JONES
+         ATOMS      HW HW
+         EPSILON    0.0  
+         SIGMA      0.1
+         RCUT       7.0
+       &END LENNARD-JONES
+     &END NONBONDED
+   &END FORCEFIELD

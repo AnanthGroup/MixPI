@@ -1,0 +1,6 @@
+ &BOND
+   ATOMS 1024XX      1CO
+   K     [angstrom^-2kcalmol]   0.0000000000000000     
+   R0    [angstrom]                  1.0000000000000000     
+   KIND G87 
+ &END BOND
