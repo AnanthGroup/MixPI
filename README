@@ -1,6 +1,19 @@
-Simple CP2K Fortran Driver that Links to CP2K library and runs a path integral simulation.
-It also prints the positions and forces to additional files. 
-The current version (MixPI v1.1) is citable at https://doi.org/10.5281/zenodo.11130634. 
+      MixPI: Mixed-Time Slicing RPMD Atomistic Software
 
 
-Additional information can be found in the MixPi User Manual Below.
+
+## Installation
+
+
+## Citation
+An introduction to MixPI and some example simulations have been published at 
+Johnson, Britta A., Siyu Bu, Christopher J. Mundy, and Nandini Ananth. "MixPI: Mixed-Time Slicing Path Integral Software for Quantized Molecular Dynamics Simulations." 
+arXiv preprint arXiv:2411.11988 (2024).
+
+The MixPI software is citable at https://doi.org/10.5281/zenodo.11130634. 
+
+##Acknowledgements
+The authors are grateful to Greg Schenter for useful discussions. 
+B.A.J. and C.J.M acknowledge support by the DOE Office of Science, Office of Basic Energy Sciences, Division of Chemical Sciences, Geosciences, and Biosciences, Condensed Phase and Interfacial Molecular Science program, FWP 16249. 
+N.A. and B.A.J. acknowledge support from the U.S. Department of Energy, Office of Basic Energy Sciences, Division of Chemical Sciences, Geosciences and Biosciences under Award DE-FG02-12ER16362 (Nanoporous Materials Genome: Methods and Software to Optimize Gas Storage, Separations, and Catalysis). 
+S.B. acknowledges support from Cornell University, Department of Chemistry and Chemical Biology and the New Frontiers Grant from the College of Arts and Science.
