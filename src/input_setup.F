@@ -57,6 +57,8 @@ if (trim(adjustl(md%print_level)) /= 'low' .and. trim(adjustl(md%print_level)) /
     write(*,*)' print_levels are "high" and "low" '
 close(101)
 
+md%run_average = 0
+
 ! -------------------------------------------- !
 ! WE ASSUME THAT TIME WAS READ IN IN FS. HERE  !
 ! WE CONVERT THIS TIME INTO ATOMIC UNITS. ---- !
@@ -144,7 +146,6 @@ else
   md%virtual_site = .false.
 endif
 
-write(*,*)' end of read in md'
 
 
 END SUBROUTINE read_in_md
@@ -549,7 +550,6 @@ include 'mpif.h'
 ! CONTAINS ANY INPUT RELEVANT TO THE CLASSICAL --- !
 ! VARIABLES. ------------------------------------- !
 ! ------------------------------------------------ !
-write(*,*)' read in classical.inp '
 open(101,file='file_info.inp')
 read(101,*) classical%cp2k_input_file
 read(101,*) classical%cp2k_output_file
@@ -579,7 +579,6 @@ CALL cp2k_create_force_env(classical%cp2k_env_flag,trim(classical%cp2k_input_fil
 ! ------------------------------------------------ !
 !if (para_var%my_rank == 0) then
   CALL cp2k_get_natom(classical%cp2k_env_flag, total_natoms)
-  write(*,*)'natoms is ', total_natoms
 
   CALL pimd_initialize(path_integral,md)
   
@@ -931,7 +930,6 @@ if (md%init_vel .eqv. .true. ) then
   !close(222)
   !write(*,*) 'rescale vel '
   CALL rescale_velocities(classical, path_integral, md, para_var)
-  write(*,*) 'classical vel '
   open(222,file='atom-vel.dat')
   do i = 1, classical%natoms
     write(222,'(3d20.6)') classical%i_velocity(i,:)
@@ -1023,11 +1021,11 @@ do iatom = 1, classical%natoms
     write(*,*)' classical%beta is ', classical%beta
     write(*,*)' classical%mass is ', classical%mass(iatom)
   enddo
-  open(222,file='atom-vel-2.dat')
-  do i = 1, classical%natoms
-    write(222,'(3d20.6)') classical%i_velocity(i,:)
-  enddo
-  close(222)
+  !open(222,file='atom-vel-2.dat')
+  !do i = 1, classical%natoms
+  !  write(222,'(3d20.6)') classical%i_velocity(i,:)
+  !enddo
+  !close(222)
 enddo
 if (md%fixed) then
   icount = md%n_fixed_atoms
@@ -1046,11 +1044,11 @@ if (md%fixed) then
     icount = icount - 1
   enddo
 endif
-  open(222,file='atom-vel-1.dat')
-  do i = 1, classical%natoms
-    write(222,'(3d20.6)') classical%i_velocity(i,:)
-  enddo
-  close(222)
+  !open(222,file='atom-vel-1.dat')
+  !do i = 1, classical%natoms
+  !  write(222,'(3d20.6)') classical%i_velocity(i,:)
+  !enddo
+  !close(222)
 else
   classical%i_velocity(:,:) = 0.0d0
 endif
@@ -1068,7 +1066,6 @@ integer                           ::i,j
 
 
 !CALCULATE THE NUMBER OF CONTRAINTS IN THE SYSTEM!
-write(*,*)' calc_contraints' 
 md%n_constraints = 0 
 md%x_cnst = 0
 md%y_cnst = 0
@@ -1116,13 +1113,11 @@ if (md%virtual_site) then
       md%z_cnst = md%z_cnst + md%n_virtual_sites
 endif
 
-write(*,*)' number of constraints in simulation ', md%n_constraints
 if (classical%natoms+path_integral%total_beads > 2 ) then
   md%n_constraints = md%n_constraints + 6
 else
   md%n_constraints = md%n_constraints + 5
 endif
-write(*,*)' number of constraints in simulation ', md%n_constraints
 
 END SUBROUTINE calc_constraints
 
@@ -1150,7 +1145,6 @@ include 'mpif.h'
 
 
 !CALCULATE THE NUMBER OF CONTRAINTS IN THE SYSTEM!
-write(*,*)' rescale velocities' 
 !md%n_constraints = 0 
 !x_cnst = 0
 !y_cnst = 0

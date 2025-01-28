@@ -73,7 +73,6 @@ include 'mpif.h'
 !call the pimd md routine.
 !this will conduct a MD run for the ring polymer
 !and classical atoms (if present).
-write(*,*) 'run_md '
 CALL run_md(classical, path_integral, md, para_var)
 ! ------------------------------------------- !
 

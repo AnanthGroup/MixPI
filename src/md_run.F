@@ -38,12 +38,10 @@ real(kind=8),dimension(1:3)     ::com, com_check
 ! OPEN CONTINUALLY RUNNING FILES ----------------------- !
 ! ------------------------------------------------------ !
 !trajectory files
-write(*,*)' start md_run '
-open(676, file='trajectory_run_full.dat')
-open(677, file='trajectory_run_com.dat')
+open(676, file='trajectory_run_full.xyz')
+open(677, file='trajectory_run_com.xyz')
 open(678, file='trajectory_run_centroid.dat')
 !energy files
-open(203,file='energy_acutal.dat')
 open(204,file='energy_virials.dat')
 open(205,file='energy_average.dat')
 run_kin = 0.0d0
@@ -51,7 +49,8 @@ run_pot = 0.0d0
 run_temp = 0.0d0
 icount = 0
 if (trim(adjustl(md%print_level)) == 'high') open(801,file='forces.dat')
-if (trim(adjustl(md%print_level)) == 'high') open(802,file='trajectory_all.dat')
+if (trim(adjustl(md%print_level)) == 'high') open(802,file='trajectory_all.xyz')
+if (trim(adjustl(md%print_level)) == 'high') open(203,file='energy_actual.dat')
 open(400,file='debug.out')
 
 ! ------------------------------------------- !
@@ -122,8 +121,10 @@ istep=0
 ! INITIAL STRUCTURES ------------------------------------!
 ! -------------------------------------------------------!
 ! energy files
-write(203,'(i5,f16.2,7f20.10)')0, 0*md%dt/fstota,classical%kinetic,classical%potential, path_integral%kinetic, &
+if (trim(adjustl(md%print_level)) == 'high') then
+  write(203,'(i5,f16.2,7f20.10)')0, 0*md%dt/fstota,classical%kinetic,classical%potential, path_integral%kinetic, &
     path_integral%potential, md%kinetic_virial, md%potential_virial, md%kinetic_primitive
+endif
 write(204,'(i5,2f16.2,4f20.10)')istep, istep*md%dt/fstota,md%instant_temp,&
         md%kinetic_virial, md%potential_virial, md%kinetic_primitive, md%kinetic_virial+md%potential_virial
 !if (classical%natoms+path_integral%total_beads <= 2) then
@@ -161,12 +162,12 @@ do irp = 1, path_integral%num_rp
     write(802,'(a2, 6f15.8)') trim(path_integral%rp(irp)%particle_label(j)&
         (len(trim(path_integral%rp(irp)%particle_label(j)))-1:)), &
         path_integral%rp(irp)%x(j,:)/AtoBohr, path_integral%rp(irp)%p(j,1:md%space_dim)&
-        /path_integral%rp(irp)%kinetic_mass!/(AtoBohr/fstota)
+        /path_integral%rp(irp)%kinetic_mass/(AtoBohr/fstota)
   enddo
 enddo
 do j = 1, classical%natoms
   write(802,'(a2, 6f15.8)') trim(classical%atom_kinds(j)), classical%x(j,:)/AtoBohr, &
-   classical%p(j,:)/(classical%mass(j))!*AtoBohr/fstota)
+   classical%p(j,:)/(classical%mass(j)*AtoBohr/fstota)
 enddo
 endif
 
@@ -236,7 +237,7 @@ do istep = 1, md%nsteps
     if (istep == 1 .and. para_var%my_rank == 0) then
       call system_clock(itime_cend)
       open(111,file='runtime_info.dat',position='append')
-      write(111,*)' time for thermostat step ', itime_cend-itime_cstart, real(itime_cend-itime_cstart)/real(crate)
+      write(111,*)' time for thermostat step ', real(itime_cend-itime_cstart)/real(crate)
       close(111)
     endif
   endif
@@ -327,8 +328,10 @@ do istep = 1, md%nsteps
   ! PRINT THE TRAJECTORY AND ENERGIES IF THE ---!
   ! PRINT FREQUENCY IS MET.---------------------!
   if(mod(istep,md%freq_print)==0) THEN
-    write(203,'(i5,f16.2,7f20.10)')istep, istep*md%dt/fstota,classical%kinetic,classical%potential, path_integral%kinetic, &
+    if (trim(adjustl(md%print_level)) == 'high') then
+      write(203,'(i5,f16.2,7f20.10)')istep, istep*md%dt/fstota,classical%kinetic,classical%potential, path_integral%kinetic, &
         path_integral%potential, md%kinetic_virial, md%potential_virial, md%kinetic_primitive
+    endif
     write(204,'(i5,2f16.2,4f20.10)')istep, istep*md%dt/fstota,md%instant_temp,&
         md%kinetic_virial, md%potential_virial, md%kinetic_primitive, md%kinetic_virial+md%potential_virial
     !if (classical%natoms+path_integral%total_beads <= 2) then
@@ -341,7 +344,7 @@ do istep = 1, md%nsteps
     !    md%kinetic_virial, md%potential_virial, md%kinetic_primitive, md%kinetic_virial+md%potential_virial
     !endif
   endif
-  if (istep >= int(md%nsteps*0.4)) then
+  if (istep >= int(md%run_average)) then
     if (icount == 0) then
       run_kin = md%kinetic_virial
       run_pot = md%potential_virial
@@ -350,6 +353,7 @@ do istep = 1, md%nsteps
       !run_temp = (classical%kinetic+path_integral%kinetic)/((real(md%space_dim)*&
       !    (classical%natoms+path_integral%total_beads-1))*kb/2.0d0)
       icount = icount + 1
+      if(mod(istep,md%freq_print)==0) write(205,'(i5,2f16.2,3f20.10)')istep, istep*md%dt/fstota,run_temp, run_kin, run_pot, run_tot
     else
       run_kin = (run_kin*real(icount-1) + md%kinetic_virial )/dble(real(icount))
       run_pot = (run_pot*real(icount-1) + md%potential_virial)/dble(real(icount))
@@ -455,12 +459,12 @@ do istep = 1, md%nsteps
   if (istep == 1 .and. para_var%my_rank == 0) then
     call system_clock(itime_iend)
     open(111,file='runtime_info.dat',position='append')
-      write(111,*)' time for one step ', itime_iend-itime_istart, real(itime_iend-itime_istart)/real(irate)
+      write(111,*)' time for one step ', real(itime_iend-itime_istart)/real(irate)
     close(111)
   else if (istep == 2 .and. para_var%my_rank == 0) then
     call system_clock(itime_tend)
     open(111,file='runtime_info.dat',status="old", position="append")
-      write(111,*)' time for one and two step ', itime_tend-itime_tstart, real(itime_tend-itime_tstart)/real(trate)
+      write(111,*)' time for one and two step ', real(itime_tend-itime_tstart)/real(trate)
     close(111)
   endif
 enddo
@@ -469,7 +473,7 @@ close(675)
 close(676)
 close(677)
 close(678)
-close(203)
+if (trim(adjustl(md%print_level)) == 'high') close(203)
 close(204)
 close(205)
 
@@ -501,22 +505,22 @@ do j = 1, classical%natoms
 enddo
 close(678)
 
-if (trim(adjustl(md%print_level)) == 'high') then
+!if (trim(adjustl(md%print_level)) == 'high') then
 !writes the trajectory file
-  do irp = 1, path_integral%num_rp
-    open(201,file='trajectory_pimd_'//char(irp+48)//'.xyz')
-    write(*,*)' print the md traj file '
-    do i = 0, md%nsteps/md%freq_print
-      write(201,*) path_integral%rp(irp)%num_beads
-      write(201,*)' i = ', i
-      do j = 1, path_integral%rp(irp)%num_beads
-        write(201,'(a2, 6f15.8)') trim(path_integral%rp(irp)%particle_label(j)), path_integral%rp(irp)%traj(i,j,1:3)/AtoBohr, &
-            path_integral%rp(irp)%traj(i,j,4:6)/(AtoBohr)
-      enddo
-    enddo
-    close(201) 
-  enddo
-endif
+!  do irp = 1, path_integral%num_rp
+!    open(201,file='trajectory_pimd_'//char(irp+48)//'.xyz')
+!    write(*,*)' print the md traj file '
+!    do i = 0, md%nsteps/md%freq_print
+!      write(201,*) path_integral%rp(irp)%num_beads
+!      write(201,*)' i = ', i
+!      do j = 1, path_integral%rp(irp)%num_beads
+!        write(201,'(a2, 6f15.8)') trim(path_integral%rp(irp)%particle_label(j)), path_integral%rp(irp)%traj(i,j,1:3)/AtoBohr, &
+!            path_integral%rp(irp)%traj(i,j,4:6)/(AtoBohr)
+!      enddo
+!    enddo
+!    close(201) 
+!  enddo
+!endif
 
 
 END SUBROUTINE run_md
@@ -660,7 +664,6 @@ do irp = 1, path_integral%num_rp
     centroid(i) = sum(path_integral%rp(irp)%x(:,i))&
     /dble(real(path_integral%rp(irp)%num_beads))
   enddo
-  write(*,*)' centroid is ', centroid(:)
   !do i = 1, nbead
 !	  bead_term_local = bead_term_local + dot_product(path_integral%rp(irp)%x(i,:)-centroid(:),&
 !            (-1.0d0*path_integral%rp(irp)%force(i,:)))
@@ -852,7 +855,7 @@ CALL update_force_env(classical, path_integral, md)
     if (step == 1 .and. para_var%my_rank == 0) then
       call system_clock(itime_cend)
       open(111,file='runtime_info.dat',position='append')
-      write(111,*)' time for update environment step ', itime_cend-itime_cstart, real(itime_cend-itime_cstart)/real(crate)
+      write(111,*)' time for update environment step ', real(itime_cend-itime_cstart)/real(crate)
       close(111)
     endif
     if (step == 1 .and. para_var%my_rank == 0) then
@@ -863,7 +866,7 @@ CALL calc_force_cp2k(classical, path_integral, md)
     if (step == 1 .and. para_var%my_rank == 0) then
       call system_clock(itime_cend)
       open(111,file='runtime_info.dat',position='append')
-      write(111,*)' time for calc force cp2k step ', itime_cend-itime_cstart, real(itime_cend-itime_cstart)/real(crate)
+      write(111,*)' time for calc force cp2k step ', real(itime_cend-itime_cstart)/real(crate)
       close(111)
     endif
 CALL calc_force_pi(path_integral, md, 0)
@@ -1267,7 +1270,7 @@ CALL update_force_env(classical, path_integral, md)
     if (icount == 1 .and. para_var%my_rank == 0) then
       call system_clock(itime_cend)
       open(111,file='runtime_info.dat',position='append')
-      write(111,*)' time for update force env step ', itime_cend-itime_cstart, real(itime_cend-itime_cstart)/real(crate)
+      write(111,*)' time for update force env step ', real(itime_cend-itime_cstart)/real(crate)
       close(111)
     endif
     if (icount == 1 .and. para_var%my_rank == 0) then
@@ -1278,7 +1281,7 @@ CALL calc_force_cp2k(classical, path_integral, md)
     if (icount == 1 .and. para_var%my_rank == 0) then
       call system_clock(itime_cend)
       open(111,file='runtime_info.dat',position='append')
-      write(111,*)' time for calc_force_cp2k step ', itime_cend-itime_cstart, real(itime_cend-itime_cstart)/real(crate)
+      write(111,*)' time for calc_force_cp2k step ', real(itime_cend-itime_cstart)/real(crate)
       close(111)
     endif
     if (icount == 1 .and. para_var%my_rank == 0) then
@@ -1289,7 +1292,7 @@ CALL calc_force_pi(path_integral, md, 0)
     if (icount == 1 .and. para_var%my_rank == 0) then
       call system_clock(itime_cend)
       open(111,file='runtime_info.dat',position='append')
-      write(111,*)' time for calc_force_pi step ', itime_cend-itime_cstart, real(itime_cend-itime_cstart)/real(crate)
+      write(111,*)' time for calc_force_pi step ', real(itime_cend-itime_cstart)/real(crate)
       close(111)
     endif
 
@@ -1324,7 +1327,7 @@ CALL manual_normal_to_cart(path_integral, md, icount)
     if (icount == 1 .and. para_var%my_rank == 0) then
       call system_clock(itime_cend)
       open(111,file='runtime_info.dat',position='append')
-      write(111,*)' time for propagate normal mode step ', itime_cend-itime_cstart, real(itime_cend-itime_cstart)/real(crate)
+      write(111,*)' time for propagate normal mode step ', real(itime_cend-itime_cstart)/real(crate)
       close(111)
     endif
 
