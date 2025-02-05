@@ -1,8 +1,10 @@
       MixPI: Mixed-Time Slicing RPMD Atomistic Software
 
 
-
 ## Installation
+Detailed installation instructions are provided in the PDF MixPI Manual in the repository. MixPI requires the installation of CP2K, which can be found at https://github.com/cp2k/cp2k/blob/master/INSTALL.md. 
+The main repository contains the most recent developer version of MixPI that may contain additional features or parameters that are not outlined in the MixPI manual. MixPI v2.1 (the most recent version published on the GitHub page) is the most recent version 
+of MixPI to have undergone limited compile and runtime checks and is up to date with the PDF Manual in the repository. MixPI is a code under active development and may contain bugs or errors. 
 
 
 ## Citation
