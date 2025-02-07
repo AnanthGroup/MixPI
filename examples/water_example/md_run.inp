@@ -1,0 +1,17 @@
+200  	!nsteps for md run
+1       !how frequent to save/print the positions
+0.5    	!dt in fs
+pimd    !method
+nvt      !ensemble (nvt or nve)
+pileg   !thermostat (pile, pileg)
+3       !dof for system;ignore
+cp2k    !location of external forces (model is a calculcated pseudo-potential; cp2k gets them from classical particles from CP2K run; none is all PI)
+1       !model number;ignore
+300.0   !temperature for PIMD run
+normal_manual     	!Use normal; progagation: indicates which scheme to use in moving the bead: none (single bead velocity verlet), normal (normal mode prop)
+.true.             	!init_vel_rp: initialize RP velocities from Boltzmann. If .F., read in from file rp-vel.dat
+.false.			!Are contraints present (frozen atoms, centroid contraints)
+300.0   !Thermostat contraint for Classical (tau0 in fs)
+250.0   !Thermostt contraint for PI beads  (tau0 in fs)
+low    	!Print level (low/high)
+

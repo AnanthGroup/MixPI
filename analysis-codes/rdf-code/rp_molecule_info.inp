@@ -1,0 +1,5 @@
+90 				!Total number of molecules
+3	90	SPCFw.psf	!number of atoms in molecule	number of molecules of this type	psf file (not needed for pi_rdf code)
+	4			!number of beads in atom 1 for this molecule type
+	32			!number of beads in atom 2 for this molecule type ... continued until the total number of atoms
+	32

@@ -1,0 +1,5 @@
+'cp2k.inp'                   !cp2k_input_file: absolute path to the CP2K input file
+'output.out'                   !cp2k_output_file: absolute path to where CP2K prints the output
+'RP_structure.xyz'                   !cp2k_structure_file: classical structure file
+.true.                              !logical for presence of classical atoms
+'classical_molset.pot'                                  !cp2k_structure_type: file type for cp2k_structure_file

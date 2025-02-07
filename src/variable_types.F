@@ -87,6 +87,7 @@ TYPE md_info
   LOGICAL                                            ::xx_present = .false.
   REAL(kind=8)                                       ::xx_rcut
   INTEGER                                            ::xx_atom_num
+  INTEGER                                            ::run_average
 END TYPE md_info
 
 TYPE classical_type

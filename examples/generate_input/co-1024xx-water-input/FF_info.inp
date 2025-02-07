@@ -1,0 +1,19 @@
+#ff_type	atom1	atom2	k	units	r0	units	
+BOND	1
+OW	HW	1059.162	[angstrom^-2kcalmol]	1.012	[angstrom]
+#
+#ff_type	atom1	atom2	atom3	k	units	theta0	units
+BEND	1
+HW	OW	HW	75.90	[rad^-2kcalmol]	113.24	[deg]
+#
+#ff_type	atom	eps	[unit]	sig	[unit]	rcut
+LJ	8
+OW	78.21349	[K_e]		3.17	[angstrom]	7.0
+HW	0.0	[K_e]	1.0	[angstrom]	7.0
+HH	17.0	[K_e]	2.6	[angstrom]	7.0
+AR	116.81	[K_e]	3.4	[angstrom]	7.0	
+NE	116.81	[K_e]	3.4	[angstrom]	7.0	
+XX	0.0	[K_e]	2.6	[angstrom]	7.0
+CO	666.77	[K_e]	4.134	[angstrom]	7.0
+CL      116.81	[K_e]	3.4	[angstrom]	7.0
+
