@@ -1,6 +1,8 @@
-Here is a list of CP2K files that have been edited to interface with the MixPI code. These files should be copied to the cp2k/src folder
-and CP2K should be recompiled. None of the edits performed to these files prevent CP2K from running as normal.
+Here is a list of the files that I edited to make the MTS-PI code.
 
+constraint.F
+constraint_vsite.F
+start/libcp2k.F
 subsys/molecule_kind_types.F
 topology_util.F
 topology_psf.F

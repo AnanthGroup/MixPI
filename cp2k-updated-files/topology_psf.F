@@ -87,7 +87,7 @@ CONTAINS
 
       CHARACTER(LEN=2*default_string_length)             :: psf_format
       CHARACTER(LEN=3)                                   :: c_int
-      CHARACTER(LEN=default_string_length)               :: dummy_field, field, label, strtmp1, &
+      CHARACTER(LEN=default_string_length)               :: field, label, strtmp1, &
                                                             strtmp2, strtmp3, strtmp4
       INTEGER :: handle, i, iatom, ibond, idum, index_now, iphi, itheta, iw, natom, natom_prev, &
          nbond, nbond_prev, nphi, nphi_prev, ntheta, ntheta_prev, output_unit
@@ -129,7 +129,7 @@ CONTAINS
          CASE ("EXT")
             IF (psf_type == do_conn_psf) THEN
                ! EXTEnded CHARMM31 format
-               psf_format = '(I10,T12,A7,T21,I8,T30,A7,T39,A6,T47,A6,T53,F10.6,T69,F8.3,T88,I1)'
+               psf_format = '(I10,T12,A7,T21,I8,T30,A7,T39,A6,T47,A6,T53,F10.6,T69,F12.8,T88,I1)'   !EDIT BAJ
                c_int = 'I10'
             ELSE
                CPABORT("PSF_INFO| "//field(1:3)//" :: not available for UPSF format!")
