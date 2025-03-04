@@ -1,6 +1,6 @@
       MixPI: Mixed-Time Slicing RPMD Atomistic Software
 
-![Awesome Figure](toc.png)
+!toc.png
 
 
 MixPI is an atomistic molecular dynamics software package which conducts path-integral molecular dynamics and ring polymer molecular dynamics simulations using the mixed-time slicing approach. Mixed-time slicing PIMD/RPMD allows for the quantization of specific atoms in the simulation to different degrees; 
