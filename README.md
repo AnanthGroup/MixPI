@@ -1,8 +1,6 @@
 
 # MixPI: Mixed-Time Slicing RPMD Atomistic Software
 
-![Logo](images/toc.png)
-
 <img src="images/toc.png" alt="Logo" width="300" />
 
 
