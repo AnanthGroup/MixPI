@@ -82,14 +82,14 @@ CALL run_md(classical, path_integral, md, para_var)
 ! ------------------------------------------- !
 ! if used classical atoms, deallocate all required
 ! arrays.
-if (trim(md%obtain_force) == 'cp2k') then
+!if (trim(md%obtain_force) == 'cp2k') then
   CALL classical_atom_destroy(classical)
   ! ------------------------------------------- !
   !deallocates all cp2k arrays and removes the 
   !force_env information.
     CALL destroy_cp2k
   ! ------------------------------------------- !
-endif
+!endif
 ! ------------------------------------------- !
 
 

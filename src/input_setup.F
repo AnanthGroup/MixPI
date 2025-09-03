@@ -43,9 +43,10 @@ read(101,*) md%method
 read(101,*) md%ensemble
 if (md%method /= 'pimd' .and. md%method /= 'rpmd') write(*,*)' this method is not supported'
 if (md%ensemble == 'nvt') read(101,*) md%thermostat
-read(101,*) md%space_dim
-read(101,*) md%obtain_force
-read(101,*) md%model_no
+!read(101,*) md%space_dim
+md%space_dim=3
+!read(101,*) md%obtain_force
+!read(101,*) md%model_no
 read(101,*) md%temp
 read(101,*) md%propagation
 read(101,*) md%init_vel
@@ -555,7 +556,7 @@ read(101,*) classical%cp2k_input_file
 read(101,*) classical%cp2k_output_file
 read(101,*) classical%cp2k_structure_file
 read(101,*) classical%atom_present
-read(101,*) classical%cp2k_conn_file
+if (classical%atom_present) read(101,*) classical%cp2k_conn_file
 close(101)
 
 

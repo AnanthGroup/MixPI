@@ -8,15 +8,15 @@ FLAGS = -O3 -ffree-form -fopenmp -fbacktrace
 
 #Global paths for the cp2k and dbcsr libraries. This is the location CP2K 
 #puts the library directories
-CP2K_LIB = /people/john708/bin/cp2k-v2023/cp2k-2023.2-Jun11/cp2k-2023.2/lib/local/psmp 
-DBCSR_LIB = /people/john708/bin/cp2k-v2023/cp2k-2023.2-Jun11/cp2k-2023.2/lib/local/psmp/exts/dbcsr
+CP2K_LIB = ~/bin/cp2k-2023.2/lib/local/psmp 
+DBCSR_LIB = ~/bin/cp2k-2023.2/lib/local/psmp/exts/dbcsr
 
 #Global paths for the cp2k and dbcsr include/object directories. They contain
 #the .F, .mod, and .o files for ALL of the subroutines/modules used by CP2K.
 #Must move the libcp2k.h file from the src/start folder into the CP2K_INC folder
 #or have another path that points towards this directory. 
-CP2K_INC = /people/john708/bin/cp2k-v2023/cp2k-2023.2-Jun11/cp2k-2023.2/obj/local/psmp 
-DBCSR_INC = /people/john708/bin/cp2k-v2023/cp2k-2023.2-Jun11/cp2k-2023.2/obj/local/psmp/exts/dbcsr
+CP2K_INC = ~/bin/cp2k-2023.2/obj/local/psmp 
+DBCSR_INC = ~/bin/cp2k-2023.2/obj/local/psmp/exts/dbcsr
 
 #Path from the compile statement of CP2K. It is the base part of the path for the FFTW,
 #SCALAPACK, MKL, and BLACS libraries.

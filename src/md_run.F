@@ -51,7 +51,7 @@ icount = 0
 if (trim(adjustl(md%print_level)) == 'high') open(801,file='forces.dat')
 if (trim(adjustl(md%print_level)) == 'high') open(802,file='trajectory_all.xyz')
 if (trim(adjustl(md%print_level)) == 'high') open(203,file='energy_actual.dat')
-open(400,file='debug.out')
+!open(400,file='debug.out')
 
 ! ------------------------------------------- !
 ! ALLOCATE AND SET-UP PATH-INTEGRAL VARIABLES !
@@ -692,8 +692,8 @@ endif
 
 !write(*,*)' extra_term is ', extra_term
 
-write(400,*)' extra term is ', extra_term
-write(400,*)' bead term is ', bead_term
+!write(400,*)' extra term is ', extra_term
+!write(400,*)' bead term is ', bead_term
 
 kinetic_virial = bead_term + extra_term
 
@@ -734,8 +734,8 @@ else
   extra_term = dble(real(3.0d0*classical%natoms-md%n_constraints))/(2.0d0*classical%beta)
 endif
 
-write(400,*)' primitive extra term is ', extra_term
-write(400,*)' primitive bead term is ', pot_energy
+!write(400,*)' primitive extra term is ', extra_term
+!write(400,*)' primitive bead term is ', pot_energy
 total_energy = pot_energy + extra_term     !BAJ: March27 made change above to include
                                                            !constraint and
                                                            !space_dim
