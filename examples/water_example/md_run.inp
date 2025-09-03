@@ -1,5 +1,5 @@
 200  	!nsteps for md run
-1       !how frequent to save/print the positions
+10      !how frequent to save/print the positions
 0.5    	!dt in fs
 pimd    !method
 nvt      !ensemble (nvt or nve)
