@@ -103,13 +103,32 @@ path_integral%kinetic = 0.0d0
 ! INITIALIZES THE FORCE ARRAYS AND GENERATES THE -------!
 ! ENERGY AND FORCES FOR THE INITIAL POSITIONS ----------!
 ! ------------------------------------------------------!
-
+if (para_var%my_rank == 0) then
+  call system_clock(count_rate=crate)
+  call system_clock(itime_cstart)
+endif
 CALL update_force_env(classical, path_integral, md)
+if (para_var%my_rank == 0) then
+  call system_clock(itime_cend)
+  open(111,file='runtime_info.dat',position='append')
+  write(111,*)' time for update environment step ', real(itime_cend-itime_cstart)/real(crate)
+  close(111)
+endif
 do irp = 1, path_integral%num_rp
   path_integral%rp(irp)%force = 0.0d0
 enddo
 classical%force = 0.d0
-CALL calc_force_cp2k(classical, path_integral, md)
+if (para_var%my_rank == 0) then
+  call system_clock(count_rate=crate)
+  call system_clock(itime_cstart)
+endif
+CALL calc_force_cp2k(classical, path_integral, md)      !call 1 at initial config. FORCE/ENERGY  
+if (para_var%my_rank == 0) then
+  call system_clock(itime_cend)
+  open(111,file='runtime_info.dat',position='append')
+  write(111,*)' time for calc force cp2k step ', real(itime_cend-itime_cstart)/real(crate)
+  close(111)
+endif
 CALL calc_force_pi(path_integral, md, 0)
 
 CALL calc_total_energy(classical, path_integral, md, 0)
@@ -215,10 +234,13 @@ do istep = 1, md%nsteps
   ! BEGIN SUBROUTINE BY ZEROING OUT ALL FORCES FOR - !
   ! BOTH PATH-INTEGRAL AND CLASSICAL DOF ----------- !
   ! ------------------------------------------------ !
-  do irp = 1, path_integral%num_rp
-    path_integral%rp(irp)%force = 0.0d0
-  enddo
-  classical%force = 0.d0
+
+!BAJ REMOVE BLOCK
+  !do irp = 1, path_integral%num_rp
+  !  path_integral%rp(irp)%force = 0.0d0
+  !enddo
+  !classical%force = 0.d0
+! -----------
 
     ! ------------------------------------------------ !
     ! IF DOING NVT SIMULATIONS, THE FIRST CALL TO THE- !
@@ -259,20 +281,24 @@ do istep = 1, md%nsteps
     !uses a normal mode propoagtor for the PIs. Calculcates the -!
     !propagation/rotation matrix manually (not using FFTW) ------!
     ! -----------------------------------------------------------!
-    classical%force = 0.0d0
-    do irp = 1, path_integral%num_rp
-      path_integral%rp(irp)%force = 0.0d0
-    enddo
+    !BAJ REMOVE BLOCK -------- !
+    !classical%force = 0.0d0
+    !do irp = 1, path_integral%num_rp
+    !  path_integral%rp(irp)%force = 0.0d0
+    !enddo
+    ! --------------------------- !
     CALL vv_update_pi_normal_manual(classical, path_integral, md, md%dt,istep, para_var)
   else if (trim(md%propagation) == 'none' .and. path_integral%num_rp > 0) then
     ! -----------------------------------------------------------!
     ! uses a standard velocity-verlet integrator to step each ---!
     ! individual bead. ------------------------------------------!
     ! -----------------------------------------------------------!
-    classical%force = 0.0d0
-    do irp = 1, path_integral%num_rp
-      path_integral%rp(irp)%force = 0.0d0
-    enddo
+    ! BAJ REMOVE BLOCK ---- !
+    !classical%force = 0.0d0
+    !do irp = 1, path_integral%num_rp
+    !  path_integral%rp(irp)%force = 0.0d0
+    !enddo
+    ! ---------------------- !
     CALL vv_update_pi(classical,path_integral,md, md%dt,istep)
   else if (path_integral%num_rp > 0) then
     write(*,*)' this propagation scheme does not match an option give '
@@ -282,10 +308,12 @@ do istep = 1, md%nsteps
   ! ---------------------------------------------------------!
   ! ZEROS OUT FORCES AND RECALCULCATES FORCES AT NEW UPDATED-!
   ! POSITIONS -----------------------------------------------!
-  do irp = 1, path_integral%num_rp            
-    path_integral%rp(irp)%force = 0.0d0       
-  enddo                                 
-  classical%force = 0.0d0
+  ! BAJ REMOVE BLOCK ---- !
+  !do irp = 1, path_integral%num_rp            
+  !  path_integral%rp(irp)%force = 0.0d0       
+  !enddo                                 
+  !classical%force = 0.0d0
+  ! ---------------------- !
 
   if (classical%natoms > 0) then
     CALL vv_update_classical(classical, path_integral, md, md%dt/2.d0, istep, para_var)
@@ -313,14 +341,16 @@ do istep = 1, md%nsteps
      ! CALCULCATE THE CONSERVED QUANTITIES (ENERGY FOR !
      ! NVE SIMULATIONS) AND PRINT TO FILE AT EACH STEP !
      ! ----------------------------------------------- !
-  CALL update_force_env(classical, path_integral, md)
-  do irp = 1, path_integral%num_rp
-    path_integral%rp(irp)%force = 0.0d0
-  enddo
-  classical%force = 0.d0
-  CALL calc_force_cp2k(classical, path_integral, md)
-  CALL calc_force_pi(path_integral, md, 0)
 
+!!!! BAJ: REMOVED THIS BLOCK
+  !CALL update_force_env(classical, path_integral, md)
+  !do irp = 1, path_integral%num_rp
+  !  path_integral%rp(irp)%force = 0.0d0
+  !enddo
+  !classical%force = 0.d0
+  !CALL calc_force_cp2k(classical, path_integral, md)       !this is like the 8th call to FORCE/ENERGY Not needed
+  !CALL calc_force_pi(path_integral, md, 0)
+!!!!!
   CALL calc_total_energy(classical, path_integral, md, istep)
   
 
@@ -494,8 +524,8 @@ close(678)
 open(678, file='final_rp-vel.xyz')
 do irp = 1, path_integral%num_rp
   do j = 1, path_integral%rp(irp)%num_beads
-    write(678,'(6f20.15)') path_integral%rp(irp)%p(j,:)/path_integral%rp(irp)%kinetic_mass, &
-      path_integral%rp(irp)%p(j,:)/(AtoBohr/fstota)
+    write(678,'(3f20.15)') path_integral%rp(irp)%p(j,:)/path_integral%rp(irp)%kinetic_mass
+      !path_integral%rp(irp)%p(j,:)/(AtoBohr/fstota)
   enddo
 enddo
 close(678)
@@ -545,15 +575,15 @@ do irp = 1, path_integral%num_rp
   do i = 1, path_integral%rp(irp)%num_beads
     icount = icount+1
     positions( (icount-1)*md%space_dim+1: icount*md%space_dim) = path_integral%rp(irp)%x(i,:)
-    velocities( (icount-1)*md%space_dim+1: icount*md%space_dim) = path_integral%rp(irp)%p(i,:)/path_integral%rp(irp)%kinetic_mass
+    !velocities( (icount-1)*md%space_dim+1: icount*md%space_dim) = path_integral%rp(irp)%p(i,:)/path_integral%rp(irp)%kinetic_mass
   enddo
 enddo
 if (icount /= path_integral%total_beads) WRITE(*,*)' ERROR IN FORCE UPDATE ENV PI INDEX '
 do i = 1, classical%natoms
   positions( (i-1+path_integral%total_beads)*md%space_dim+1: (i+path_integral%total_beads)*md%space_dim ) = &
     classical%x(i,1:md%space_dim) 
-  velocities( (i-1+path_integral%total_beads)*md%space_dim+1: (i+path_integral%total_beads)*md%space_dim ) = &
-    classical%p(i,1:md%space_dim)/classical%mass(i)
+  !velocities( (i-1+path_integral%total_beads)*md%space_dim+1: (i+path_integral%total_beads)*md%space_dim ) = &
+  !  classical%p(i,1:md%space_dim)/classical%mass(i)
 enddo
 
 call MPI_BARRIER(MPI_COMM_WORLD,ierror)
@@ -621,9 +651,9 @@ integer               ::i, ierror
 
 include 'mpif.h'
 
-call MPI_BARRIER(MPI_COMM_WORLD,ierror)
-CALL cp2k_calc_energy_force(classical%cp2k_env_flag)
-call MPI_BARRIER(MPI_COMM_WORLD,ierror)
+!call MPI_BARRIER(MPI_COMM_WORLD,ierror)
+!CALL cp2k_calc_energy_force(classical%cp2k_env_flag)
+!call MPI_BARRIER(MPI_COMM_WORLD,ierror)
 
 CALL cp2k_get_potential_energy(classical%cp2k_env_flag, pot_energy)
 !write(*,*)'classical potential energy is ', pot_energy
@@ -802,9 +832,11 @@ integer                 ::irp,i, j, step
 !  path_integral%rp(irp)%force = 0.0d0
 !enddo
 
-CALL update_force_env(classical, path_integral, md)
-CALL calc_force_cp2k(classical, path_integral, md)
-CALL calc_force_pi(path_integral, md, 0)
+!BAJ: REMOVE THIS BLOCK
+!CALL update_force_env(classical, path_integral, md)
+!CALL calc_force_cp2k(classical, path_integral, md)       !Not Needed (5th or so) call to FORCE/ENERGY   not needed
+!CALL calc_force_pi(path_integral, md, 0)
+!--------
 
 CALL update_pi_p(path_integral, dt)
 CALL update_pi_x(path_integral, md, dt)
@@ -815,7 +847,7 @@ do irp = 1, path_integral%num_rp
   path_integral%rp(irp)%force = 0.0d0
 enddo
 CALL update_force_env(classical, path_integral, md)
-CALL calc_force_cp2k(classical, path_integral, md)
+CALL calc_force_cp2k(classical, path_integral, md)      !6th call to FORCE/ENERGY      needed
 CALL calc_force_pi(path_integral, md, 0)
 
 
@@ -847,29 +879,31 @@ integer         ::crate, itime_cstart, itime_cend
 !  path_integral%rp(irp)%force = 0.0d0
 !enddo
 
-    if (step == 1 .and. para_var%my_rank == 0) then
-      call system_clock(count_rate=crate)
-      call system_clock(itime_cstart)
-    endif
-CALL update_force_env(classical, path_integral, md)
-    if (step == 1 .and. para_var%my_rank == 0) then
-      call system_clock(itime_cend)
-      open(111,file='runtime_info.dat',position='append')
-      write(111,*)' time for update environment step ', real(itime_cend-itime_cstart)/real(crate)
-      close(111)
-    endif
-    if (step == 1 .and. para_var%my_rank == 0) then
-      call system_clock(count_rate=crate)
-      call system_clock(itime_cstart)
-    endif
-CALL calc_force_cp2k(classical, path_integral, md)
-    if (step == 1 .and. para_var%my_rank == 0) then
-      call system_clock(itime_cend)
-      open(111,file='runtime_info.dat',position='append')
-      write(111,*)' time for calc force cp2k step ', real(itime_cend-itime_cstart)/real(crate)
-      close(111)
-    endif
-CALL calc_force_pi(path_integral, md, 0)
+!BAJ REMOVE THIS BLOCK
+    !if (step == 1 .and. para_var%my_rank == 0) then
+    !  call system_clock(count_rate=crate)
+    !  call system_clock(itime_cstart)
+    !endif
+    !CALL update_force_env(classical, path_integral, md)
+    !if (step == 1 .and. para_var%my_rank == 0) then
+    !  call system_clock(itime_cend)
+    !  open(111,file='runtime_info.dat',position='append')
+    !  write(111,*)' time for update environment step ', real(itime_cend-itime_cstart)/real(crate)
+    !  close(111)
+    !endif
+    !if (step == 1 .and. para_var%my_rank == 0) then
+    !  call system_clock(count_rate=crate)
+    !  call system_clock(itime_cstart)
+    !endif
+    !CALL calc_force_cp2k(classical, path_integral, md)          !call 2 (everytime start vv_update_classical) FORCE/ENERGY  NOT NEEDED
+    !if (step == 1 .and. para_var%my_rank == 0) then
+    !  call system_clock(itime_cend)
+    !  open(111,file='runtime_info.dat',position='append')
+    !  write(111,*)' time for calc force cp2k step ', real(itime_cend-itime_cstart)/real(crate)
+    !  close(111)
+    !endif
+    !CALL calc_force_pi(path_integral, md, 0)
+! --------------
 
 if (trim(adjustl(md%print_level)) == 'high') then
   write(801,*) sum(path_integral%rp(:)%num_beads) + classical%natoms
@@ -884,7 +918,7 @@ if (trim(adjustl(md%print_level)) == 'high') then
   enddo
 endif
 
-CALL update_classical_p(classical, dt)
+CALL update_classical_p(classical, dt)                      
 CALL update_classical_x(classical, dt)
 
 
@@ -892,8 +926,8 @@ classical%force = 0.0d0
 do irp = 1, path_integral%num_rp
   path_integral%rp(irp)%force = 0.0d0
 enddo
-CALL update_force_env(classical, path_integral, md)
-CALL calc_force_cp2k(classical, path_integral, md)
+CALL update_force_env(classical, path_integral, md)        
+CALL calc_force_cp2k(classical, path_integral, md)            !call 3 (after moving classical atoms) FORCE/ENERGY NEEDED
 CALL calc_force_pi(path_integral, md, 0)
 
 
@@ -1262,39 +1296,42 @@ real(kind=8)          :: dt
 integer               :: irp,icount,i, j
 integer         ::crate, itime_cstart, itime_cend
 
-    if (icount == 1 .and. para_var%my_rank == 0) then
-      call system_clock(count_rate=crate)
-      call system_clock(itime_cstart)
-    endif
-CALL update_force_env(classical, path_integral, md)
-    if (icount == 1 .and. para_var%my_rank == 0) then
-      call system_clock(itime_cend)
-      open(111,file='runtime_info.dat',position='append')
-      write(111,*)' time for update force env step ', real(itime_cend-itime_cstart)/real(crate)
-      close(111)
-    endif
-    if (icount == 1 .and. para_var%my_rank == 0) then
-      call system_clock(count_rate=crate)
-      call system_clock(itime_cstart)
-    endif
-CALL calc_force_cp2k(classical, path_integral, md)
-    if (icount == 1 .and. para_var%my_rank == 0) then
-      call system_clock(itime_cend)
-      open(111,file='runtime_info.dat',position='append')
-      write(111,*)' time for calc_force_cp2k step ', real(itime_cend-itime_cstart)/real(crate)
-      close(111)
-    endif
-    if (icount == 1 .and. para_var%my_rank == 0) then
-      call system_clock(count_rate=crate)
-      call system_clock(itime_cstart)
-    endif
-CALL calc_force_pi(path_integral, md, 0)
-    if (icount == 1 .and. para_var%my_rank == 0) then
-      call system_clock(itime_cend)
-      open(111,file='runtime_info.dat',position='append')
-      write(111,*)' time for calc_force_pi step ', real(itime_cend-itime_cstart)/real(crate)
-      close(111)
-    endif
+
+! BAJ REMOVE THIS BLOCK
+!    if (icount == 1 .and. para_var%my_rank == 0) then
+!      call system_clock(count_rate=crate)
+!      call system_clock(itime_cstart)
+!    endif
+!CALL update_force_env(classical, path_integral, md)
+!    if (icount == 1 .and. para_var%my_rank == 0) then
+!      call system_clock(itime_cend)
+!      open(111,file='runtime_info.dat',position='append')
+!      write(111,*)' time for update force env step ', real(itime_cend-itime_cstart)/real(crate)
+!      close(111)
+!    endif
+!    if (icount == 1 .and. para_var%my_rank == 0) then
+!      call system_clock(count_rate=crate)
+!      call system_clock(itime_cstart)
+!    endif
+!CALL calc_force_cp2k(classical, path_integral, md)         !4th call of FORCE/ENERGY not needed
+!    if (icount == 1 .and. para_var%my_rank == 0) then
+!      call system_clock(itime_cend)
+!      open(111,file='runtime_info.dat',position='append')
+!      write(111,*)' time for calc_force_cp2k step ', real(itime_cend-itime_cstart)/real(crate)
+!      close(111)
+!    endif
+!    if (icount == 1 .and. para_var%my_rank == 0) then
+!      call system_clock(count_rate=crate)
+!      call system_clock(itime_cstart)
+!    endif
+!CALL calc_force_pi(path_integral, md, 0)
+!    if (icount == 1 .and. para_var%my_rank == 0) then
+!      call system_clock(itime_cend)
+!      open(111,file='runtime_info.dat',position='append')
+!      write(111,*)' time for calc_force_pi step ', real(itime_cend-itime_cstart)/real(crate)
+!      close(111)
+!    endif
+! -----------------------
 
 !write(888,*) sum(path_integral%rp(:)%num_beads) + classical%natoms
 !write(888,*)' dt = ', dt*(icount-1)
@@ -1343,7 +1380,7 @@ do irp = 1, path_integral%num_rp
   path_integral%rp(irp)%force = 0.0d0
 enddo
 !write(*,*)' calc_force_mix BAJ error'
-CALL update_force_env(classical, path_integral, md)
+CALL update_force_env(classical, path_integral, md)      !5th call to calculcate FORCE/ENERGY needed
 CALL calc_force_cp2k(classical, path_integral, md)
 CALL calc_force_pi(path_integral, md, 0)
 
