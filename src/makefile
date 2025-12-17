@@ -3,20 +3,28 @@ FC = mpif90
 #libraries need for compilation. First line are CP2K general flags. Second line
 #are flags that match specific compilation version of CP2K.
 LIB_CP2K = -lcp2k -ldbcsr
-LIB = $(LIB_CP2K) -lgfortran -lspla -lspfft -lsymspg -lvdwxc -lhdf5 -lhdf5_hl -lz -lgsl -lelpa_openmp -lcosma_prefixed_pxgemm -lcosma -lcosta  -lxsmmf -lxsmm -ldl -lpthread -lxcf03 -lxc -lint2 -lfftw3_mpi -lfftw3 -lfftw3_omp   -lmpi  -L/share/apps/intel/2020u4/mkl/lib/intel64 -Wl,-rpath,/share/apps/intel/2020u4/mkl/lib/intel64 -lmkl_scalapack_lp64 -Wl,--start-group -lmkl_gf_lp64 -lmkl_sequential -lmkl_core -lmkl_blacs_openmpi_lp64 -Wl,--end-group -lpthread -lm -ldl -lvori -lstdc++ -lstdc++
-FLAGS = -O3 -ffree-form -fopenmp -fbacktrace
+LIB = $(LIB_CP2K) -lplumed -lxcf03 -lxc -lGXCommon -lgx_ac -lgx_minimax -lint2 -lxsmmf -lxsmmf.1 -lxsmmext -lxsmm -lhdf5_fortran -lhdf5_f90cstub -lhdf5 -lz -lsz  -lcosma_prefixed_pxgemm -lcosma -lcosta -lfftw3_mpi -lfftw3_omp -lfftw3 -lscalapack -lgsl -lopenblas
+FLAGS = -O3 -ffree-form -fopenmp -fbacktrace -fallow-argument-mismatch
+
+HDF5_HOME = $(shell brew --prefix hdf5)
+SZ_HOME = $(shell brew --prefix libaec)
+#-lhdf5_fortran -lhdf5_f90cstub -lhdf5 -lsz -ltblite -ldftd4 -ls-dftd3 -lmulticharge -lmctc-lib -ltoml-f -ltrexio 
 
 #Global paths for the cp2k and dbcsr libraries. This is the location CP2K 
 #puts the library directories
-CP2K_LIB = ~/bin/cp2k-2023.2/lib/local/psmp 
-DBCSR_LIB = ~/bin/cp2k-2023.2/lib/local/psmp/exts/dbcsr
+CP2K_LIB = /Users/john708/Documents/Software/cp2k/lib/Darwin-gnu-arm64/psmp 
+DBCSR_LIB = /Users/john708/Documents/Software/cp2k/lib/Darwin-gnu-arm64/psmp/exts/dbcsr
+BREW_LIB += -L$(HDF5_HOME)/lib
+BREW_LIB += -L$(SZ_HOME)/lib
 
 #Global paths for the cp2k and dbcsr include/object directories. They contain
 #the .F, .mod, and .o files for ALL of the subroutines/modules used by CP2K.
 #Must move the libcp2k.h file from the src/start folder into the CP2K_INC folder
 #or have another path that points towards this directory. 
-CP2K_INC = ~/bin/cp2k-2023.2/obj/local/psmp 
-DBCSR_INC = ~/bin/cp2k-2023.2/obj/local/psmp/exts/dbcsr
+CP2K_INC = /Users/john708/Documents/Software/cp2k/obj/Darwin-gnu-arm64/psmp
+DBCSR_INC = /Users/john708/Documents/Software/cp2k/lib/Darwin-gnu-arm64/psmp/exts/dbcsr
+BREW_INC += -I$(HDF5_HOME)/include
+BREW_INC += -I$(SZ_HOME)/include
 
 #Path from the compile statement of CP2K. It is the base part of the path for the FFTW,
 #SCALAPACK, MKL, and BLACS libraries.
@@ -39,16 +47,16 @@ MO1 = md_run
 #Makes .o files from all of the .F files. Include additional 
 #routines for additional files (it's own object generation as
 #well as inclusion OBJ defintion).
-$(MO4).o: $(MO4).F
-	$(FC) -c $(MO4).F $(FLAGS)
-$(MO3).o: $(MO3).F $(MO4).F
-	$(FC) -c $(MO3).F -I$(CP2K_INC) -I$(DBCSR_INC)  $(LIB) $(FLAGS)
-$(MO2).o: $(MO2).F $(MO3).F $(MO4).F
-	$(FC) -c $(MO2).F -I$(CP2K_INC) -I$(DBCSR_INC)  $(LIB) $(FLAGS)
-$(MO1).o: $(MO1).F $(MO4).F
-	$(FC) -c $(MO1).F -I$(CP2K_INC) -I$(DBCSR_INC)   $(LIB) $(FLAGS)
-$(MAIN).o: $(MAIN).F $(MO1).F $(MO2).F $(MO3).F $(MO4).F 
-	$(FC) -c $(MAIN).F -I$(CP2K_INC) -I$(DBCSR_INC) $(LIB) $(FLAGS)
+$(MO4).o: $(MO4).f90
+	$(FC) -c $(MO4).f90 $(FLAGS)
+$(MO3).o: $(MO3).f90 $(MO4).f90
+	$(FC) -c $(MO3).f90 -I$(CP2K_INC) -I$(DBCSR_INC) $(BREW_INC)  $(LIB) $(FLAGS)
+$(MO2).o: $(MO2).f90 $(MO3).f90 $(MO4).f90
+	$(FC) -c $(MO2).f90 -I$(CP2K_INC) -I$(DBCSR_INC) $(BREW_INC)  $(LIB) $(FLAGS)
+$(MO1).o: $(MO1).f90 $(MO4).f90
+	$(FC) -c $(MO1).f90 -I$(CP2K_INC) -I$(DBCSR_INC) $(BREW_INC)  $(LIB) $(FLAGS)
+$(MAIN).o: $(MAIN).f90 $(MO1).f90 $(MO2).f90 $(MO3).f90 $(MO4).f90 
+	$(FC) -c $(MAIN).f90 -I$(CP2K_INC) -I$(DBCSR_INC) $(BREW_INC) $(LIB) $(FLAGS)
  
 OBJ = $(MAIN).o $(MO1).o $(MO2).o $(MO3).o $(MO4).o
 
@@ -58,7 +66,7 @@ OBJ = $(MAIN).o $(MO1).o $(MO2).o $(MO3).o $(MO4).o
 #libmkl_blacs_intelmpi_lp64. (See the lib flags.)
 #For dependencies, library flags come AFTER main.o
 $(MAIN).out	: $(MO4).o $(MO3).o $(MO2).o $(MO1).o $(MAIN).o
-	$(FC) -I$(CP2K_INC) -I$(DBCSR_INC) -L$(CP2K_LIB) -L$(DBCSR_LIB) $(OBJ) $(LIB) $(FLAGS) -lstdc++ -lz -ldl -lgomp -lpthread -o $@ 
+	$(FC) -I$(CP2K_INC) -I$(DBCSR_INC) $(BREW_INC) -L$(CP2K_LIB) -L$(DBCSR_LIB) $(BREW_LIB) $(OBJ) $(LIB) $(FLAGS) -lstdc++ -lz -ldl  -o $@ 
 
 
 #Removes the .mod, .o, and .out files
