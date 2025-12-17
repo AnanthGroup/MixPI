@@ -1,5 +1,0 @@
- &MOLECULE
-   NMOL            1
-   CONNECTIVITY PSF
-   CONN_FILE_NAME rp-1-electron.psf
- &END MOLECULE
