@@ -1,0 +1,18 @@
+ &BOND
+   ATOMS 4OW      32HW
+   K     [angstrom^-2kcalmol]   33.098812500000001     
+   R0    [angstrom]                  1.0000000000000000     
+   KIND G87 
+ &END BOND
+ &BOND
+   ATOMS 4OW      32HW
+   K     [angstrom^-2kcalmol]   33.098812500000001     
+   R0    [angstrom]                  1.0000000000000000     
+   KIND G87 
+ &END BOND
+ &BEND
+   ATOMS 32HW      4OW     32HW
+   K     [rad^-2kcalmol]   2.3718750000000002     
+   THETA0    [deg]                       112.00000000000000     
+   KIND G87 
+ &END BEND

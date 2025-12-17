@@ -1,0 +1,18 @@
+ &LENNARD-JONES
+   ATOMS 4OW     4OW
+   EPSILON [K_e]                       19.566350000000000     
+   SIGMA [angstrom]                  3.1654920000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 4OW     32HW
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  1.5827460000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 32HW     32HW
+   EPSILON [K_e]                       0.0000000000000000     
+   SIGMA [angstrom]                  0.0000000000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
