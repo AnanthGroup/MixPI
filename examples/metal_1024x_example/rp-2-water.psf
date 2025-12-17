@@ -1,0 +1,34 @@
+ PSF EXT
+
+           1 !NTITLE
+
+
+           3 !NATOMS 
+         1 RP3             2      RP  OW1     1OW    -0.820000       15.99900000       1
+         2 RP3             2      RP  HW1     1HW     0.410000        1.00800000       1
+         3 RP3             2      RP  HW1     1HW     0.410000        1.00800000       1
+
+
+           2 !NBONDS
+         1         2         1         3
+
+
+           1 !NTHETA
+         2         1         3
+
+
+           0 !NPHI
+
+
+           0 !NIMPHI
+
+
+           0 !NDON
+
+
+           0 !NACC
+
+
+           0 !NNB
+
+

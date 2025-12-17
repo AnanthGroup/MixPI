@@ -1,0 +1,10 @@
+ &MOLECULE
+   NMOL            1
+   CONNECTIVITY PSF
+   CONN_FILE_NAME rp-1-electron.psf
+ &END MOLECULE
+ &MOLECULE
+   NMOL           91
+   CONNECTIVITY PSF
+   CONN_FILE_NAME rp-2-water.psf
+ &END MOLECULE

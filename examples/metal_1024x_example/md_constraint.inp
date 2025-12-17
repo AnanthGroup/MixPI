@@ -1,0 +1,6 @@
+.false.				! classical atom constraints
+.true.				! PI centroid constraint
+list
+1
+2	xyz
+.false.				! virtual site (tip4p) constraint

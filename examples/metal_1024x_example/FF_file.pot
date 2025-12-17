@@ -1,0 +1,34 @@
+   &FORCEFIELD
+     &SPLINE
+       EMAX_SPLINE 1.0E15
+       !EMAX_ACCURACY  1.0E002
+       UNIQUE_SPLINE T
+       R0_NB 5.0E-005   !4.76259488E-003
+       RCUT_NB [angstrom] 7.0
+       EPS_SPLINE .006
+     &END SPLINE
+     @INCLUDE 'RP_FF_bond.pot'
+     &NONBONDED
+       @INCLUDE 'RP_FF_nonbond.pot'
+       !&GENPOT
+       !  ATOMS 1FE 1024XX
+       !  FUNCTION (qAqC/rc)* (1+tanh(-200.0*(r-rc)))/2.0 + (qAqC/r)*(1+tanh(200.0*(r-rc)))/2.0
+       !  PARAMETERS qAqC, rc
+       !  RMIN [angstrom] 0.0
+       !  RMAX [angstrom] 7.0
+       !  UNITS hartree*angstrom angstrom
+       !  VALUES -0.00292968 1.1
+       !  VARIABLES r
+       !&END GENPOT  
+       !&GENPOT
+       !  ATOMS 1HW 1024XX
+       !  FUNCTION (qAqH/rc)* (1+tanh(-200.0*(r-rc)))/2.0 - (qAqH/r)*(1+tanh(-200.0*(r-rc)))/2.0
+       !  PARAMETERS qAqH, rc
+       !  RMIN [angstrom] 0.0
+       !  RMAX [angstrom] 1.0
+       !  UNITS hartree*angstrom angstrom
+       !  VALUES -0.000400391 1.0
+       !  VARIABLES r
+       !&END GENPOT  
+     &END NONBONDED
+   &END FORCEFIELD

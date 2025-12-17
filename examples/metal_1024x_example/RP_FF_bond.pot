@@ -1,0 +1,24 @@
+ &BOND
+   ATOMS 1024XX  1FE  
+   K     [angstrom^-2kcalmol]   0.0000000 
+   R0    [angstrom]                  1.10000000000000     
+   KIND G87 
+ &END BOND
+ &BOND
+   ATOMS 1OW      1HW
+   K     [angstrom^-2kcalmol]   1059.1620000000000     
+   R0    [angstrom]                  1.0120000000000000     
+   KIND G87 
+ &END BOND
+ &BOND
+   ATOMS 1OW      1HW
+   K     [angstrom^-2kcalmol]   1059.1620000000000     
+   R0    [angstrom]                  1.0120000000000000     
+   KIND G87 
+ &END BOND
+ &BEND
+   ATOMS 1HW      1OW     1HW
+   K     [rad^-2kcalmol]   75.900000000000006     
+   THETA0    [deg]                       113.23999999999999     
+   KIND G87 
+ &END BEND

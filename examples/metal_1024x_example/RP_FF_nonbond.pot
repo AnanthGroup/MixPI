@@ -1,0 +1,156 @@
+ &LENNARD-JONES
+   ATOMS 1024XX     1024XX
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  2.6000000000000001     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1024XX     1FE
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  2.5347850000000003     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1024XX     1OW
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  2.8827460000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1024XX     1HW
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  1.8000000000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1024XX     OW
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  2.8827460000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1024XX     HW
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  1.8000000000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1024XX     XX
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  2.6000000000000001     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1024XX     FE
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  2.5347850000000003     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1FE     1FE
+   EPSILON [kcalmol]                   1.3570970000000000E-002
+   SIGMA [angstrom]                  2.4695700000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1FE     1OW
+   EPSILON [kcalmol]                   4.5926812251026086E-002
+   SIGMA [angstrom]                  2.8175309999999998     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1FE     1HW
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  1.7347850000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1FE     OW
+   EPSILON [kcalmol]                   4.5926812251026086E-002
+   SIGMA [angstrom]                  2.8175309999999998     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1FE     HW
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  1.7347850000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1FE     XX
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  2.5347850000000003     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1FE     FE
+   EPSILON [kcalmol]                   1.3570970000000000E-002
+   SIGMA [angstrom]                  2.4695700000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1OW     1OW
+   EPSILON [kcalmol]                  0.15542529999999999     
+   SIGMA [angstrom]                  3.1654920000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1OW     1HW
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  2.0827460000000002     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1OW     OW
+   EPSILON [kcalmol]                  0.15542529999999999     
+   SIGMA [angstrom]                  3.1654920000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1OW     HW
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  2.0827460000000002     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1OW     XX
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  2.8827460000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1OW     FE
+   EPSILON [kcalmol]                   4.5926812251026086E-002
+   SIGMA [angstrom]                  2.8175309999999998     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1HW     1HW
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  1.0000000000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1HW     OW
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  2.0827460000000002     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1HW     HW
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  1.0000000000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1HW     XX
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  1.8000000000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES
+ &LENNARD-JONES
+   ATOMS 1HW     FE
+   EPSILON [kcalmol]                   0.0000000000000000     
+   SIGMA [angstrom]                  1.7347850000000000     
+   RCUT [angstrom]                  7.0000000000000000     
+ &END LENNARD-JONES

@@ -1,0 +1,15 @@
+50  !nsteps for md run
+1       !how frequent to save/print the positions
+0.01    !dt (for beads) in fs
+pimd
+nvt      !nvt (and then anything else ==) nve 
+pile
+500.0
+100.0
+300.0        !temperature for PIMD run
+normal_manual                       !progagation: indicates which scheme to use in moving the bead: none (single bead), normal (normal mode prop), Cayele
+.true.                             !init_vel_rp: initialize RP velocities from Boltzmann. If .F., read in from file.
+.true.
+high
+
+
