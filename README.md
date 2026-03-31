@@ -1,5 +1,5 @@
 
-# MixPI: Mixed-Time Slicing RPMD Atomistic Software
+# MixPI: Software for atomistic PIMD simulations with mixed time slicing
 
 <img src="images/toc.png" alt="Logo" width="300" />
 
