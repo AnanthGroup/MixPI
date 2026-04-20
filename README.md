@@ -21,6 +21,6 @@ arXiv preprint arXiv:2411.11988 (2024).
 
 The MixPI software is citable at https://doi.org/10.5281/zenodo.11130634. 
 
-#Acknowledgements
+# Acknowledgements
 The authors are grateful to Greg Schenter for useful discussions. 
 B.A.J. and C.J.M acknowledge support by the DOE Office of Science, Office of Basic Energy Sciences, Division of Chemical Sciences, Geosciences, and Biosciences, Condensed Phase and Interfacial Molecular Science program, FWP 16249. PNNL is operated by Battelle Memorial Institute for the United States Department of Energy under DOE Contract No. DE-AC05-76RL1830. Research reported in this publication was also partially supported by the National Institute of General Medical Sciences of the National Institutes of Health under award number 1R35GM158400-01 to N.A., S. B. thanks the Cornell Arts and Sciences New Frontiers Grant for seed funding. In addition, N.A. and B.A.J. acknowledge prior support from the U.S. Department of Energy, Office of Basic Energy Sciences, Division of Chemical Sciences, Geosciences and Biosciences under Award DE-FG02-12ER16362 (Nanoporous Materials Genome: Methods and Software to Optimize Gas Storage, Separations, and Catalysis).  This research used resources of the National Energy Research Scientific Computing Center (NERSC), a Department of Energy User Facility using NERSC award BES-ERCAP0036077.
