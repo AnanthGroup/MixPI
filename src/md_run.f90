@@ -297,56 +297,27 @@ do istep = 1, md%nsteps
      ! VELOCITY-VERLET STEP WITH THE CLASSICAL ATOMS - !
      ! FOR A TIMESTEP OF DT/2 ------------------------ !
      ! ----------------------------------------------- !
-  if (classical%natoms > 0) then
-    CALL vv_update_classical(classical, path_integral, md, md%dt/2.0d0, istep, para_var)
-  endif
+!  if (classical%natoms > 0) then
+!    CALL vv_update_classical(classical, path_integral, md, md%dt/2.0d0, istep, para_var)
+!  endif
 
-  if (trim(md%propagation) == 'normal_fftw' .and. path_integral%num_rp > 0) then
-     !  write(*,*)' vv_update_pi BAJ error'
-     !  CALL vv_update_pi_fftw(md%dt)     !THIS (CALL TO FFTW) NEEDS TO BE FIXED
-    write(*,*)' option not currently supported! '
-  else if (trim(md%propagation) == 'normal_manual') then
-    ! -----------------------------------------------------------!
-    !uses a normal mode propoagtor for the PIs. Calculcates the -!
-    !propagation/rotation matrix manually (not using FFTW) ------!
-    ! -----------------------------------------------------------!
-    !BAJ REMOVE BLOCK -------- !
-    !classical%force = 0.0d0
-    !do irp = 1, path_integral%num_rp
-    !  path_integral%rp(irp)%force = 0.0d0
-    !enddo
-    ! --------------------------- !
-    CALL vv_update_pi_normal_manual(classical, path_integral, md, md%dt,istep, para_var)
-  else if (trim(md%propagation) == 'none' .and. path_integral%num_rp > 0) then
-    ! -----------------------------------------------------------!
-    ! uses a standard velocity-verlet integrator to step each ---!
-    ! individual bead. ------------------------------------------!
-    ! -----------------------------------------------------------!
-    ! BAJ REMOVE BLOCK ---- !
-    !classical%force = 0.0d0
-    !do irp = 1, path_integral%num_rp
-    !  path_integral%rp(irp)%force = 0.0d0
-    !enddo
-    ! ---------------------- !
-    CALL vv_update_pi(classical,path_integral,md, md%dt,istep)
-  else if (path_integral%num_rp > 0) then
-    write(*,*)' this propagation scheme does not match an option give '
-    STOP
-  endif
+!  if (trim(md%propagation) == 'normal_fftw' .and. path_integral%num_rp > 0) then
+!    write(*,*)' option not currently supported! '
+!  else if (trim(md%propagation) == 'normal_manual') then
+!    CALL vv_update_pi_normal_manual(classical, path_integral, md, md%dt,istep, para_var)
+!  else if (trim(md%propagation) == 'none' .and. path_integral%num_rp > 0) then
+!    CALL vv_update_pi(classical,path_integral,md, md%dt,istep)
+!  else if (path_integral%num_rp > 0) then
+!    write(*,*)' this propagation scheme does not match an option give '
+!    STOP
+!  endif
 
-  ! ---------------------------------------------------------!
-  ! ZEROS OUT FORCES AND RECALCULCATES FORCES AT NEW UPDATED-!
-  ! POSITIONS -----------------------------------------------!
-  ! BAJ REMOVE BLOCK ---- !
-  !do irp = 1, path_integral%num_rp            
-  !  path_integral%rp(irp)%force = 0.0d0       
-  !enddo                                 
-  !classical%force = 0.0d0
-  ! ---------------------- !
+!  if (classical%natoms > 0) then
+!    CALL vv_update_classical(classical, path_integral, md, md%dt/2.d0, istep, para_var)
+!  endif
 
-  if (classical%natoms > 0) then
-    CALL vv_update_classical(classical, path_integral, md, md%dt/2.d0, istep, para_var)
-  endif
+  ! JS OCT8
+  CALL vv_update_joint(classical, path_integral, md, md%dt, istep, para_var)
 
     ! --------------------------------------------- !
     ! Second call to the thermostat --------------- !
@@ -946,55 +917,6 @@ real(kind=8)            ::dt
 integer                 ::irp,i, j, step
 integer         ::crate, itime_cstart, itime_cend
 
-!classical%force = 0.0d0
-!do irp = 1, path_integral%num_rp
-!  path_integral%rp(irp)%force = 0.0d0
-!enddo
-
-!BAJ REMOVE THIS BLOCK
-    !if (step == 1 .and. para_var%my_rank == 0) then
-    !  call system_clock(count_rate=crate)
-    !  call system_clock(itime_cstart)
-    !endif
-    !CALL update_force_env(classical, path_integral, md)
-    !if (step == 1 .and. para_var%my_rank == 0) then
-    !  call system_clock(itime_cend)
-    !  open(111,file='runtime_info.dat',position='append')
-    !  write(111,*)' time for update environment step ', real(itime_cend-itime_cstart)/real(crate)
-    !  close(111)
-    !endif
-    !if (step == 1 .and. para_var%my_rank == 0) then
-    !  call system_clock(count_rate=crate)
-    !  call system_clock(itime_cstart)
-    !endif
-    !CALL calc_force_cp2k(classical, path_integral, md)          !call 2 (everytime start vv_update_classical) FORCE/ENERGY  NOT NEEDED
-    !if (step == 1 .and. para_var%my_rank == 0) then
-    !  call system_clock(itime_cend)
-    !  open(111,file='runtime_info.dat',position='append')
-    !  write(111,*)' time for calc force cp2k step ', real(itime_cend-itime_cstart)/real(crate)
-    !  close(111)
-    !endif
-    !CALL calc_force_pi(path_integral, md, 0)
-! --------------
-
-!write(*,*) 'before print'
-!if (para_var%my_rank == 0) then
-!!        write(*,*)' inside the my_rank '
-!if (trim(adjustl(md%print_level)) == 'high') then
-!  write(*,*)' print forces '
-!  write(801,*) sum(path_integral%rp(:)%num_beads) + classical%natoms
-!  write(801,*)' dt = ', dt*(step-1)
-!  do irp = 1, path_integral%num_rp
-!    do j = 1, path_integral%rp(irp)%num_beads
-!      write(801,'(a2, 3f15.8)') trim(path_integral%rp(irp)%particle_label(j)), path_integral%rp(irp)%force(j,:)
-!    enddo
-!  enddo
-!  do j = 1, classical%natoms
-!    write(801,'(a2, 3f15.8)') trim(classical%atom_kinds(j)), classical%force(j,:)
-!  enddo
-!endif
-!!endif
-
 CALL update_classical_p(classical, dt)                      
 CALL update_classical_x(classical, dt)
 
@@ -1013,6 +935,71 @@ CALL update_classical_p(classical, dt)
 END SUBROUTINE vv_update_classical
 ! ---------------------------------------------- !
 
+! JS OCT6
+! ---------------------------------------------- !
+! The velocity-verlet integrator for the ------- !
+! classical atoms and RPs. One new CP2K  ------- !
+! force evaluation per full step --------------- !
+! ---------------------------------------------- !
+SUBROUTINE vv_update_joint(classical, path_integral, md, dt, step, para_var)
+implicit none
+
+TYPE(classical_type)                     ::classical
+TYPE(path_integral_env)                  ::path_integral
+TYPE(md_info)                            ::md
+TYPE(parallel_env)                       ::para_var
+real(kind=8)                             ::dt
+integer                                  ::step
+integer                                  ::crate, itime_cstart, itime_cend
+LOGICAL                                  ::record_time
+
+record_time = step <= md%print_step .and. para_var%my_rank == 0
+
+! first half momentum update using stored forces for both classical and rp
+CALL update_all_p(classical, path_integral, dt)
+
+! full coordinate/free-RP propagation
+if (record_time) then
+  CALL system_clock(count_rate=crate)
+  CALL system_clock(itime_cstart)
+endif
+
+CALL propagate_all_x(classical, path_integral, md, dt, step)
+
+if (record_time) then
+  CALL system_clock(itime_cend)
+  open(111, file='runtime_info.dat', position='append')
+  write(111,*) ' time for free propagation step', step, &
+    real(itime_cend-itime_cstart)/real(crate)
+  close(111)
+endif
+
+! refresh forces at new configuration
+CALL clear_all_forces(classical, path_integral)
+CALL update_force_env(classical, path_integral, md)
+
+if (record_time) then
+  CALL system_clock(count_rate=crate)
+  CALL system_clock(itime_cstart)
+endif
+
+CALL calc_force_cp2k(classical,path_integral,md)
+
+if (record_time) then
+  CALL system_clock(itime_cend)
+  open(111, file='runtime_info.dat', position='append')
+  write(111,*) ' time for calc_force_cp2k step ', step, &
+    real(itime_cend-itime_cstart)/real(crate)
+  close(111)
+endif
+
+! add springs for none and refresh centroid force constraints
+CALL calc_force_pi(path_integral, md, 0)
+
+! second half momentum update
+CALL update_all_p(classical, path_integral, dt)
+
+END SUBROUTINE vv_update_joint
 
 ! ---------------------------------------------- !
 ! Subroutine that evaluates the forces on the -- !
@@ -1088,10 +1075,7 @@ real(kind=8),dimension(md%space_dim)     ::dist_vec, force
 character(len=2)                         ::match_type
 
 
-!open(999,file='xx_force_update.dat',position='append')
 do irp = 1, path_integral%num_rp
-  !if (trim(path_integral%rp(irp)%particle_label(1) &
-  !  (len(trim(path_integral%rp(irp)%particle_label(1)))-1:)) == ANY(md%xx_types(:))) then
   if (path_integral%rp(irp)%charge > 0.0d0) then 
     match_type = path_integral%rp(irp)%particle_label(1)(len(trim(path_integral%rp(irp)%particle_label(1)))-1:)
     !write(*,*)' match_type is ', match_type
@@ -1128,40 +1112,17 @@ do irp = 1, path_integral%num_rp
             dist = dsqrt(dot_product(dist_vec, dist_vec))
             force(:) = ((path_integral%rp(md%xx_atom_num)%charge * path_integral%rp(irp)%charge) &
               /dist**2) * (dist_vec(:)/dist)
-            !if (ixx == 1) then
-            !if (ibead==1) write(*,*)' distance is ', dist
-            !if (ibead==1) write(*,*)' distance_vector is ', dist
-            !if (ibead==1) write(*,*)' force is ', force
-            !if (ibead==1) write(*,*)' location of XX is ', path_integral%rp(md%xx_atom_num)%x(ixx,:) 
-            !if (ibead==1) write(*,*)' location of QP is ', path_integral%rp(irp)%x(ibead,:) 
-            !if (ibead==1) write(*,*)' force is ', force(:)
-            !if (ibead==1) write(*,*)' old XX force is ', path_integral%rp(md%xx_atom_num)%force(ixx,:)
-            !if (ibead==1) write(*,*)' old QP force is ', path_integral%rp(irp)%force(ibead,:)
-            !endif
             path_integral%rp(md%xx_atom_num)%force(ixx,:) = path_integral%rp(md%xx_atom_num)%force(ixx,:) + force
             path_integral%rp(irp)%force(ibead,:) = path_integral%rp(irp)%force(ibead,:) - force
-            !if (ixx==1) then
-            !if (ibead==1) write(*,*)' new XX force is ', path_integral%rp(md%xx_atom_num)%force(ixx,:)
-            !if (ibead==1) write(*,*)' new QP force is ', path_integral%rp(irp)%force(ibead,:)
-            !endif
           enddo
         endif
       endif
-            !if (ixx == 1 .or. ixx == 2) then
-            !  write(333,*)' distance is ', dist
-            !  write(333,*)' distance_vector is ', dist_vec(:)
-            !  write(333,*)' location of XX is ', path_integral%rp(md%xx_atom_num)%x(ixx,:) 
-            !  write(333,*)' location of QP is ', path_integral%rp(irp)%x(1,:) 
-            !  write(333,*)' new XX force is ', path_integral%rp(md%xx_atom_num)%force(ixx,:)
-            !endif
     enddo
     !write(333,*)' new QP force is ', path_integral%rp(irp)%force(1,:)
     endif
   endif
-  !endif
 enddo
 do iclassical = 1, classical%natoms
-  !if (trim(classical%atom_kinds(iclassical)) == ANY(md%xx_types(:))) then
   if (classical%ff_atom_charges(iclassical) > 0.0d0) then
     match_type = classical%atom_kinds(iclassical)
     location = 0
@@ -1179,17 +1140,10 @@ do iclassical = 1, classical%natoms
         !write(999,*)' update forces for classical ', iclassical
           force(:) = ((path_integral%rp(md%xx_atom_num)%charge * classical%ff_atom_charges(iclassical)) &
             /dist**2) * (dist_vec(:)/dist)
-          !write(999,*)' update force is ', force(:)
-          !write(999,*)' old forces are '
-          !write(999,*) path_integral%rp(md%xx_atom_num)%force(ixx,:)
-          !write(999,*) classical%force(iclassical,:)
           if (md%xx_exclude(location)) then
             path_integral%rp(md%xx_atom_num)%force(ixx,:) = path_integral%rp(md%xx_atom_num)%force(ixx,:) - force
             classical%force(iclassical,:) = classical%force(iclassical,:) + force
           endif
-          !write(999,*)' new forces are '
-          !write(999,*) path_integral%rp(md%xx_atom_num)%force(ixx,:)
-          !write(999,*) classical%force(iclassical,:)
         endif
       enddo
     endif
@@ -1280,10 +1234,11 @@ do iclassical = 1, classical%natoms
         dist_vec(:) = path_integral%rp(md%xx_atom_num)%x(ixx,:) - classical%x(iclassical,:)
         dist = dsqrt(dot_product(dist_vec, dist_vec))
         if (dist < md%xx_rcut(location)) then
+        ! JS OCT 15 removed square factor in denominator
           if (md%xx_exclude(location)) then
             pot = - ((path_integral%rp(md%xx_atom_num)%charge * classical%ff_atom_charges(iclassical)) &
-              /dist**2) + ((path_integral%rp(md%xx_atom_num)%charge * classical%ff_atom_charges(iclassical)) &
-              /md%xx_rcut(location)**2) 
+              /dist) + ((path_integral%rp(md%xx_atom_num)%charge * classical%ff_atom_charges(iclassical)) &
+              /md%xx_rcut(location)) 
             tot_pot = tot_pot + pot
           endif 
         endif
@@ -1467,72 +1422,6 @@ real(kind=8)          :: dt
 integer               :: irp,icount,i, j
 integer         ::crate, itime_cstart, itime_cend
 
-
-! BAJ REMOVE THIS BLOCK
-!    if (icount == 1 .and. para_var%my_rank == 0) then
-!      call system_clock(count_rate=crate)
-!      call system_clock(itime_cstart)
-!    endif
-!CALL update_force_env(classical, path_integral, md)
-!    if (icount == 1 .and. para_var%my_rank == 0) then
-!      call system_clock(itime_cend)
-!      open(111,file='runtime_info.dat',position='append')
-!      write(111,*)' time for update force env step ', real(itime_cend-itime_cstart)/real(crate)
-!      close(111)
-!    endif
-!    if (icount == 1 .and. para_var%my_rank == 0) then
-!      call system_clock(count_rate=crate)
-!      call system_clock(itime_cstart)
-!    endif
-!CALL calc_force_cp2k(classical, path_integral, md)         !4th call of FORCE/ENERGY not needed
-!    if (icount == 1 .and. para_var%my_rank == 0) then
-!      call system_clock(itime_cend)
-!      open(111,file='runtime_info.dat',position='append')
-!      write(111,*)' time for calc_force_cp2k step ', real(itime_cend-itime_cstart)/real(crate)
-!      close(111)
-!    endif
-!    if (icount == 1 .and. para_var%my_rank == 0) then
-!      call system_clock(count_rate=crate)
-!      call system_clock(itime_cstart)
-!    endif
-!CALL calc_force_pi(path_integral, md, 0)
-!    if (icount == 1 .and. para_var%my_rank == 0) then
-!      call system_clock(itime_cend)
-!      open(111,file='runtime_info.dat',position='append')
-!      write(111,*)' time for calc_force_pi step ', real(itime_cend-itime_cstart)/real(crate)
-!      close(111)
-!    endif
-! -----------------------
-
-!write(888,*) sum(path_integral%rp(:)%num_beads) + classical%natoms
-!write(888,*)' dt = ', dt*(icount-1)
-!do irp = 1, path_integral%num_rp
-!  do j = 1, path_integral%rp(irp)%num_beads
-!    write(888,'(a2, 6f15.8)') trim(path_integral%rp(irp)%particle_label(j)), path_integral%rp(irp)%force(j,:)
-!  enddo
-!enddo
-!do j = 1, classical%natoms
-!  write(888,'(a2, 6f15.8)') trim(classical%atom_kinds(j)), classical%force(j,:)
-!enddo
-!write(*,*) 'before print'
-!if (para_var%my_rank == 0) then
-!!        write(*,*)' inside the my_rank '
-!if (trim(adjustl(md%print_level)) == 'high') then
-!!  write(*,*)' print forces '
-!  write(801,*) sum(path_integral%rp(:)%num_beads) + classical%natoms
-!  write(801,*)' dt = ', dt*(icount-1)
-!  do irp = 1, path_integral%num_rp
-!    do j = 1, path_integral%rp(irp)%num_beads
-!      write(801,'(a2, 3f15.8)') trim(path_integral%rp(irp)%particle_label(j)), path_integral%rp(irp)%force(j,:)
-!    enddo
-!  enddo
-!  do j = 1, classical%natoms
-!    write(801,'(a2, 3f15.8)') trim(classical%atom_kinds(j)), classical%force(j,:)
-!  enddo
-!endif
-!endif
-
-
 CALL update_pi_p(path_integral, dt)
     if (icount <= md%print_step .and. para_var%my_rank == 0) then
       call system_clock(count_rate=crate)
@@ -1585,29 +1474,194 @@ CALL calc_force_pi(path_integral, md, 0)
 
 CALL update_pi_p(path_integral, dt)
 
-!write(888,*) sum(path_integral%rp(:)%num_beads) + classical%natoms
-!write(888,*)' dt = ', dt*(icount-1)
-!do irp = 1, path_integral%num_rp
-!  do j = 1, path_integral%rp(irp)%num_beads
-!    write(888,'(a2, 6f15.8)') trim(path_integral%rp(irp)%particle_label(j)), path_integral%rp(irp)%force(j,:)
-!  enddo
-!enddo
-!do j = 1, classical%natoms
-!  write(888,'(a2, 6f15.8)') trim(classical%atom_kinds(j)), classical%force(j,:)
-!enddo
-!write(889,*) sum(path_integral%rp(:)%num_beads) + classical%natoms
-!write(889,*)' dt = ', dt*(icount-1)
-!do irp = 1, path_integral%num_rp
-!  do j = 1, path_integral%rp(irp)%num_beads
-!    write(889,'(a2, 6f15.8)') trim(path_integral%rp(irp)%particle_label(j)), path_integral%rp(irp)%x(j,:), &
-!      path_integral%rp(irp)%p(j,:)
-!  enddo
-!enddo
-!do j = 1, classical%natoms
-!  write(889,'(a2, 6f15.8)') trim(classical%atom_kinds(j)), classical%x(j,:),classical%p(j,:)
-!enddo
-
 END SUBROUTINE vv_update_pi_normal_manual
+
+! JS OCT6
+! --------------------------------------------- !
+! Subroutine to update centroid position from - !
+! current bead positions ---------------------- !
+! --------------------------------------------- !
+SUBROUTINE update_rp_centroid(path_integral, md)
+implicit none
+
+TYPE(path_integral_env)   ::path_integral
+TYPE(md_info)             ::md
+integer                   :: irp,idim
+
+do irp = 1, path_integral%num_rp
+  do idim = 1, md%space_dim
+    path_integral%rp(irp)%centroid(idim) = sum(path_integral%rp(irp)%x(:,idim))&
+    /dble(real(path_integral%rp(irp)%num_beads))
+  enddo
+enddo
+
+END SUBROUTINE update_rp_centroid
+
+! JS OCT6
+! --------------------------------------------- !
+! Subroutine that propagates kinetic and spring !
+! dynamics, no external momentum updates ------ !
+! --------------------------------------------- !
+SUBROUTINE propagate_rp_free(path_integral, md, dt, step)
+implicit none
+
+TYPE(path_integral_env)           ::path_integral
+TYPE(md_info)                     ::md
+integer                           ::step
+real(kind=8)                      ::dt
+
+if (path_integral%num_rp == 0) return
+
+CALL manual_normal_rotation(path_integral)
+CALL manual_cart_to_normal(path_integral, md, step)
+CALL update_normal_coord(path_integral, md, dt)
+CALL manual_normal_to_cart(path_integral, md, step)
+
+END SUBROUTINE propagate_rp_free
+
+! JS OCT6
+! --------------------------------------------- !
+! Subroutine that clears all forces before ---- !
+! fresh force evaluation ---------------------- !
+! --------------------------------------------- !
+SUBROUTINE clear_all_forces(classical, path_integral)
+implicit none
+
+TYPE(path_integral_env)           ::path_integral
+TYPE(classical_type)              ::classical
+integer                           ::irp
+
+if (classical%natoms > 0) then
+  classical%force = 0.0d0
+endif
+
+do irp = 1, path_integral%num_rp
+  path_integral%rp(irp)%force = 0.0d0
+enddo
+
+END SUBROUTINE clear_all_forces
+
+! JS OCT6
+! --------------------------------------------- !
+! Subroutine that applies fixed and centroid -- !
+! momentum constraints ------------------------ !
+! --------------------------------------------- !
+SUBROUTINE constrain_all_p(classical, path_integral, md)
+
+TYPE(path_integral_env)           ::path_integral
+TYPE(classical_type)              ::classical
+TYPE(md_info)                     ::md
+integer                           ::icon, index, irp, iatom, idim
+real(kind=8)                      ::mean_p
+
+if (md%fixed) then
+  do icon = 1, md%n_fixed_atoms
+    index = md%fixed_list(icon,1)
+
+    if (index < 1 .or. &
+        index > path_integral%num_rp + classical%natoms) then
+      write(*,*) 'Invalid fixed-particle index: ', index
+      STOP
+    endif
+
+    do idim = 1, md%space_dim
+      if (md%fixed_list(icon,idim+1) /= 1) cycle
+
+      if (index <= path_integral%num_rp) then
+        path_integral%rp(index)%p(:,idim) = 0.0d0
+      else
+        iatom = index - path_integral%num_rp
+        classical%p(iatom,idim) = 0.0d0
+      endif
+    enddo
+  enddo
+endif
+
+if (md%centroid) then
+  do icon = 1, md%n_centroids
+    irp = md%centroid_list(icon,1)
+
+    if (irp < 1 .or. irp > path_integral%num_rp) then
+      write(*,*) 'Invalid centroid-constraint index: ', irp
+      STOP
+    endif
+
+    do idim = 1, md%space_dim
+      if (md%centroid_list(icon,idim+1) /= 1) cycle
+
+      mean_p = sum(path_integral%rp(irp)%p(:,idim)) / &
+               dble(path_integral%rp(irp)%num_beads)
+
+      path_integral%rp(irp)%p(:,idim) = &
+        path_integral%rp(irp)%p(:,idim) - mean_p
+    enddo
+  enddo
+endif
+
+END SUBROUTINE constrain_all_p
+
+! JS OCT6
+! --------------------------------------------- !
+! Half-step momentum update for all particles-- !
+! --------------------------------------------- !
+SUBROUTINE update_all_p(classical, path_integral, dt)
+implicit none
+
+TYPE(path_integral_env)           ::path_integral
+TYPE(classical_type)              ::classical
+real(kind=8)                      ::dt
+
+if (classical%natoms > 0) then
+  CALL update_classical_p(classical, dt)
+endif
+
+if (path_integral%num_rp > 0) then
+  CALL update_pi_p(path_integral, dt)
+endif
+
+END SUBROUTINE update_all_p
+
+! JS OCT6
+! --------------------------------------------- !
+! Propagate classical kinetic dynamics and RP-- !
+! free dynamics over a full timestep ---------- !
+! --------------------------------------------- !
+SUBROUTINE propagate_all_x(classical, path_integral, md, dt, step)
+implicit none
+
+TYPE(path_integral_env)           ::path_integral
+TYPE(classical_type)              ::classical
+TYPE(md_info)                     ::md
+real(kind=8)                      ::dt
+integer                           ::step
+
+! Validate before moving particles
+if (path_integral%num_rp > 0) then
+  select case (trim(md%propagation))
+  case ('normal_manual', 'none')
+  ! supported
+  case default
+    write(*,*) 'Unsupported propagation mode: ', trim(md%propagation)
+    STOP
+  end select
+endif
+
+if (classical%natoms > 0) then
+  CALL update_classical_x(classical, dt)
+endif
+
+if (path_integral%num_rp > 0) then
+  select case (trim(md%propagation))
+  case ('normal_manual')
+    CALL propagate_rp_free(path_integral, md, dt, step)
+  case ('none')
+    CALL update_pi_x(path_integral, md, dt)
+  end select
+
+  CALL update_rp_centroid(path_integral, md)
+endif
+
+END SUBROUTINE propagate_all_x
 
 ! --------------------------------------------- !
 ! Subroutine that updates the momentum of the - !
