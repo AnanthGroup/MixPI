@@ -297,9 +297,9 @@ do istep = 1, md%nsteps
      ! VELOCITY-VERLET STEP WITH THE CLASSICAL ATOMS - !
      ! FOR A TIMESTEP OF DT/2 ------------------------ !
      ! ----------------------------------------------- !
-  if (classical%natoms > 0) then
-    CALL vv_update_classical(classical, path_integral, md, md%dt/2.0d0, istep, para_var)
-  endif
+  !if (classical%natoms > 0) then
+  !  CALL vv_update_classical(classical, path_integral, md, md%dt/2.0d0, istep, para_var)
+  !endif
 
   if (trim(md%propagation) == 'normal_fftw' .and. path_integral%num_rp > 0) then
      !  write(*,*)' vv_update_pi BAJ error'
@@ -344,9 +344,9 @@ do istep = 1, md%nsteps
   !classical%force = 0.0d0
   ! ---------------------- !
 
-  if (classical%natoms > 0) then
-    CALL vv_update_classical(classical, path_integral, md, md%dt/2.d0, istep, para_var)
-  endif
+  !if (classical%natoms > 0) then
+  !  CALL vv_update_classical(classical, path_integral, md, md%dt/2.d0, istep, para_var)
+  !endif
 
     ! --------------------------------------------- !
     ! Second call to the thermostat --------------- !
@@ -1531,8 +1531,10 @@ integer         ::crate, itime_cstart, itime_cend
 !  enddo
 !endif
 !endif
-
-
+if (classical%natoms > 0) then
+  CALL update_classical_p(classical, dt)                      
+  CALL update_classical_x(classical, dt)
+endif
 CALL update_pi_p(path_integral, dt)
     if (icount <= md%print_step .and. para_var%my_rank == 0) then
       call system_clock(count_rate=crate)
@@ -1584,6 +1586,9 @@ CALL calc_force_cp2k(classical, path_integral, md)
 CALL calc_force_pi(path_integral, md, 0)
 
 CALL update_pi_p(path_integral, dt)
+if (classical%natoms > 0) then
+  CALL update_classical_p(classical, dt)                      
+endif
 
 !write(888,*) sum(path_integral%rp(:)%num_beads) + classical%natoms
 !write(888,*)' dt = ', dt*(icount-1)
