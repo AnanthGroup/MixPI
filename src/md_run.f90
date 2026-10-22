@@ -162,18 +162,6 @@ if (trim(adjustl(md%print_level)) == 'high') then
 endif
 write(204,'(i10,2f16.2,4f20.10)')istep, istep*md%dt/fstota,md%instant_temp,&
         md%kinetic_virial, md%potential_virial, md%kinetic_primitive, md%kinetic_virial+md%potential_virial
-!if (classical%natoms+path_integral%total_beads <= 2) then
-!  write(204,'(i5,2f16.2,4f20.10)')0, 0*md%dt/fstota,(classical%kinetic+path_integral%kinetic)/&
-!    ((real(md%space_dim)*(classical%natoms+path_integral%total_beads)-5)*kb/2.0d0), &
-!    md%kinetic_virial, md%potential_virial, md%kinetic_primitive, md%kinetic_virial + md%potential_virial
-!else 
-!      write(204,'(i5,2f16.2,4f20.10)')istep, istep*md%dt/fstota,(classical%kinetic+path_integral%kinetic)/&
-!        ((real(md%space_dim)*(classical%natoms+path_integral%total_beads)-(md%n_constraints))*kb/2.0d0), &
-!        md%kinetic_virial, md%potential_virial, md%kinetic_primitive, md%kinetic_virial+md%potential_virial
-!  !write(204,'(i5,2f16.2,4f20.10)')0, 0*md%dt/fstota,(classical%kinetic+path_integral%kinetic)/&
-!  !  ((real(md%space_dim)*(classical%natoms+path_integral%total_beads)-(md%n_constraints))*kb/2.0d0), &
-!  !  md%kinetic_virial, md%potential_virial, md%kinetic_primitive, md%kinetic_virial + md%potential_virial
-!endif
 
 ! trajectory files
 write(676,*) path_integral%total_beads + classical%natoms
@@ -694,10 +682,6 @@ integer               ::i, ierror
 
 include 'mpif.h'
 
-!call MPI_BARRIER(MPI_COMM_WORLD,ierror)
-!CALL cp2k_calc_energy_force(classical%cp2k_env_flag)
-!call MPI_BARRIER(MPI_COMM_WORLD,ierror)
-
 CALL cp2k_get_potential_energy(classical%cp2k_env_flag, pot_energy)
 !write(*,*)'classical potential energy is ', pot_energy
 ! --------------------------------------------- !
@@ -935,7 +919,7 @@ CALL update_classical_p(classical, dt)
 END SUBROUTINE vv_update_classical
 ! ---------------------------------------------- !
 
-! JS OCT6
+! JS OCT22 Changed to record time correctly
 ! ---------------------------------------------- !
 ! The velocity-verlet integrator for the ------- !
 ! classical atoms and RPs. One new CP2K  ------- !
@@ -958,20 +942,38 @@ record_time = step <= md%print_step .and. para_var%my_rank == 0
 ! first half momentum update using stored forces for both classical and rp
 CALL update_all_p(classical, path_integral, dt)
 
-! full coordinate/free-RP propagation
-if (record_time) then
-  CALL system_clock(count_rate=crate)
-  CALL system_clock(itime_cstart)
+! Classical/RP position update
+if (path_integral%num_rp > 0) then
+  select case (trim(md%propagation))
+  case ('normal_manual')
+    if (record_time) then
+      CALL system_clock(count_rate=crate)
+      CALL system_clock(itime_cstart)
+    endif
+
+    CALL propagate_rp_free(path_integral, md, dt, step)
+
+    if (record_time) then
+      CALL system_clock(itime_cend)
+      open(111, file='runtime_info.dat', position='append')
+      write(111,*) ' time for free propagation step', step, &
+        real(itime_cend-itime_cstart)/real(crate)
+      close(111)
+    endif
+  
+  case ('none')
+    CALL update_pi_x(path_integral, md, dt)
+
+  case default
+    write(*,*) 'Unsupported propagation mode: ', trim(md%propagation)
+    STOP
+  end select
+
+  CALL update_rp_centroid(path_integral, md)
 endif
 
-CALL propagate_all_x(classical, path_integral, md, dt, step)
-
-if (record_time) then
-  CALL system_clock(itime_cend)
-  open(111, file='runtime_info.dat', position='append')
-  write(111,*) ' time for free propagation step', step, &
-    real(itime_cend-itime_cstart)/real(crate)
-  close(111)
+if (classical%natoms > 0) then
+  CALL update_classical_x(classical, dt)
 endif
 
 ! refresh forces at new configuration
