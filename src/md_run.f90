@@ -960,6 +960,8 @@ if (path_integral%num_rp > 0) then
         real(itime_cend-itime_cstart)/real(crate)
       close(111)
     endif
+
+    CALL update_rp_centroid(path_integral, md)
   
   case ('none')
     CALL update_pi_x(path_integral, md, dt)
@@ -968,8 +970,6 @@ if (path_integral%num_rp > 0) then
     write(*,*) 'Unsupported propagation mode: ', trim(md%propagation)
     STOP
   end select
-
-  CALL update_rp_centroid(path_integral, md)
 endif
 
 if (classical%natoms > 0) then
