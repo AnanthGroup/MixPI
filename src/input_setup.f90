@@ -4,11 +4,6 @@ use libcp2k
 implicit none
 
 
-!TYPE(path_integral_env)                ::path_integral
-!TYPE(classical_type)                   ::classical
-!TYPE(md_info)                           ::md
-!TYPE(force_field)                       ::ff
-
 
 contains
 
@@ -37,7 +32,6 @@ CHARACTER(LEN=5)  ::type
 TYPE(parallel_env)                     ::para_var
 include 'mpif.h'
 
-!write(*,*)' my rank is ', para_var%my_rank, ' out of ', para_var%size_rank, ' MD_RUN '
 if (para_var%my_rank == 0) write(*,*)' ------OPENING MD_RUN.INP------ '
 open(101,file='md_run.inp')
 read(101,*) md%nsteps
@@ -49,10 +43,9 @@ if (md%method /= 'pimd' .and. md%method /= 'rpmd') write(*,*)' this method is no
 if (md%ensemble == 'nvt') read(101,*) md%thermostat
 if (md%ensemble == 'nvt') read(101,*) md%classical_lang
 if (md%ensemble == 'nvt') read(101,*) md%rp_lang
-!read(101,*) md%space_dim
+
 md%space_dim=3
-!read(101,*) md%obtain_force
-!read(101,*) md%model_no
+
 read(101,*) md%temp
 read(101,*) md%propagation
 read(101,*) md%init_vel
@@ -62,9 +55,10 @@ if (trim(adjustl(md%print_level)) /= 'low' .and. trim(adjustl(md%print_level)) /
     write(*,*)' print_levels are "high" and "low" '
 close(101)
 
+! JS OCT11: fixed typo
 if (para_var%my_rank == 0) then
 write(*,*)' ------------------------------------ '
-write(*,*)' The following input was recieved: '
+write(*,*)' The following input was received: '
 write(*,*) 'Number of MD step ', md%nsteps
 write(*,*) 'Print frequency for energy, trajectory, and force (if specified) information ', md%freq_print
 write(*,*) 'Time step ', md%dt
@@ -261,14 +255,12 @@ endif
 
 
 
-!if (para_var%my_rank == 0) write(*,*)' ------ SETTING UP CP2K ------ '
 CALL cp2k_get_version(version_cp2k,LEN(version_cp2k))  
 if (para_var%my_rank == 0) write(*,*)' CP2K Version ', TRIM(version_cp2k)
 call MPI_BARRIER(MPI_COMM_WORLD,ierror)
 write(*,*)' processor rank is ', para_var%my_rank, ' out of ', para_var%size_rank
 
 
-!write(*,*)' my rank is ', para_var%my_rank, ' out of ', para_var%size_rank, ' end of set_up_cp2k '
 
 
 END SUBROUTINE set_up_cp2k
@@ -438,10 +430,10 @@ endif
 
 path_integral%total_beads = 0
 do i = 1, path_integral%num_rp
-  !write(*,*) 'num beads for ', i, 'is ', path_integral%rp(i)%num_beads
+
   path_integral%total_beads = path_integral%total_beads + path_integral%rp(i)%num_beads
 enddo
-!write(*,*)' total number of beads are ', path_integral%total_beads
+
   
 ! -------------------------------------------------------- !
 ! ALLOCATES THE INITIAL POSITION ARRAYS FOR ALL BEAD ----- !
@@ -484,14 +476,6 @@ include 'mpif.h'
 if (para_var%my_rank == 0) then
 write(*,*) ' ------INITIALIZE BEAD VELOCITIES------ '
 do irp = 1, path_integral%num_rp
-! ---------------------------------------------- !
-! ALLOCATES THE INITALIZE_VELOCITY ARRAYS ------ !
-! ---------------------------------------------- !
-!  ALLOCATE(path_integral%rp(irp)%initialized_velocities(path_integral%rp(irp)%num_beads, &
-!md%space_dim))
-!  path_integral%rp(irp)%initialized_velocities = 0.0d0
-
-    !write(*,*) 'initalizing bead velocities ', irp
   do ibead = 1, path_integral%rp(irp)%num_beads
     do i = 1, md%space_dim
 ! ---------------------------------------------- !
@@ -560,8 +544,7 @@ else
   enddo
 endif
 call MPI_BARRIER(MPI_COMM_WORLD,ierror)
-!write(*,*)' on rank ', para_var%my_rank, ' during initialization '
-!write(*,*)' the velocities are ', path_integral%rp(1)%initialized_velocities(1,:)
+
 
 END SUBROUTINE initialize_bead_velocities
 ! --------------------------------------------- !
@@ -676,7 +659,28 @@ if (para_var%my_rank == 0) write(*,*)' ------SET UP CP2K FORCE ENVIRONMENT------
 call MPI_BARRIER(MPI_COMM_WORLD,ierror)
 CALL cp2k_create_force_env(classical%cp2k_env_flag,trim(classical%cp2k_input_file)//c_null_char, &
     trim(classical%cp2k_output_file)//c_null_char)
-!CALL cp2k_create_force_env(classical%cp2k_env_flag,classical%cp2k_input_file,classical%cp2k_output_file)
+
+! JS OCT22 Check if PLUMED can be read
+
+! ------------------------------------------------ !
+! --- CHECKS THAT CP2K CAN READ PLUMED SETTINGS -- !
+! ------------------------------------------------ !
+block
+  use f77_interface, only: f_env_type, f_env_get_from_id
+  type(f_env_type), pointer :: plumed_env
+  
+  call f_env_get_from_id(classical%cp2k_env_flag, plumed_env)
+
+  if (para_var%my_rank == 0) then
+    write(*,*) 'Metadynamics environment present: ', &
+      associated(plumed_env%force_env%meta_env)
+
+    if (associated(plumed_env%force_env%meta_env)) then
+      write(*,*) 'USE_PLUMED: ', &
+        plumed_env%force_env%meta_env%use_plumed
+    endif
+  endif
+end block
 
 ! ------------------------------------------------ !
 ! USES THE CP2K FORCE_ENV TO READ IN THE NUMBER OF !
@@ -684,7 +688,7 @@ CALL cp2k_create_force_env(classical%cp2k_env_flag,trim(classical%cp2k_input_fil
 ! ATOMS. THESE ARE THEN PARTITIONED INTO THE ----- !
 ! RELEVANT ARRAYS FOR STORAGE. ------------------- !
 ! ------------------------------------------------ !
-!if (para_var%my_rank == 0) then
+
   CALL cp2k_get_natom(classical%cp2k_env_flag, total_natoms)
 
   CALL pimd_initialize(path_integral,md, para_var)
@@ -846,13 +850,6 @@ endif
 endif
 
 
-!open(111,file='classical_info_check.dat')
-!do i = 1, classical%natoms
-!  write(111,*) i, classical%atom_kinds(i), classical%mass(i)/amutome, classical%ff_atom_charges(i)
-!enddo
-!close(111)
-
-
 if (md%ensemble == 'nvt') then
   classical%lang_atom_coeff(:) = 1.0d0/(md%classical_lang * fstota)
 endif
@@ -907,7 +904,6 @@ do i = 1, path_integral%num_rp
 
 
     path_integral%rp(i)%harm_mass = atom_mass * amutome
-    !path_integral%rp(i)%harm_mass = (atom_mass*real(path_integral%rp(i)%num_beads))*amutome
     path_integral%rp(i)%charge = atom_charge
     do ibead = 2, path_integral%rp(i)%num_beads
       read(103,*) i_dum
@@ -918,14 +914,10 @@ do i = 1, path_integral%num_rp
     endif
   else
     read(103,psf_format) i_dum, mol_name, mol_num, res_id, atom_id, atom_ff_type, atom_charge, atom_mass
-    !if ((i_dum-SUM(path_integral%rp(:i-1)%num_beads)+(i-1)) /= path_integral%rp(i)%molecule_atom_number) then
-    !  write(*,*)' error in PI PSF read in for ', i_dum, SUM(path_integral%rp(:i-1)%num_beads), i
-    !  STOP
-    !endif
+
 
     path_integral%rp(i)%particle_label(:) = atom_ff_type
     path_integral%rp(i)%harm_mass = atom_mass * amutome
-    !path_integral%rp(i)%harm_mass = (atom_mass*real(path_integral%rp(i)%num_beads))*amutome
     path_integral%rp(i)%charge = atom_charge
     do ibead = 2, path_integral%rp(i)%num_beads
       read(103,*) i_dum
@@ -946,13 +938,6 @@ do i = 1, path_integral%num_rp
     !write(*,*)' harm mass for ', i,' is ', path_integral%rp(i)%harm_mass/amutome
     !write(*,*)' kinetic mass for ', i,' is ', path_integral%rp(i)%kinetic_mass/amutome
 enddo
-
-!open(111,file='path_integral_info.dat')
-!do i = 1, path_integral%num_rp
-!    write(111,*) i, path_integral%rp(i)%particle_label, path_integral%rp(i)%kinetic_mass/amutome, &
-!	    path_integral%rp(i)%harm_mass/amutome, path_integral%rp(i)%charge
-!enddo
-!close(111)
 
 if (md%ensemble == 'nvt') then
   do irp = 1, path_integral%num_rp
@@ -989,20 +974,14 @@ enddo
 if (md%init_vel .eqv. .true.) then
   CALL initialize_bead_velocities(path_integral,md, para_var)
 
-  !open(222,file='rp-vel.dat')
-  !do i = 1, path_integral%num_rp
-  !  do j = 1, path_integral%rp(i)%num_beads
-  !    write(222,'(3f10.6)') path_integral%rp(i)%initialized_velocities(j,:)
-  !  enddo
-  !enddo
-  !close(222)
 else
   if (para_var%my_rank == 0) write(*,*)' ------READ IN VELOCITIES FROM RP-VEL.DAT------'
   open(222,file='rp-vel.dat')
   do i = 1, path_integral%num_rp
     do j = 1, path_integral%rp(i)%num_beads
       read(222,*) path_integral%rp(i)%initialized_velocities(j,1:3)
-      if (vel_atomic .eqv. .false.) path_integral%rp(i)%initialized_velocities(j,1:3) = path_integral%rp(i)%initialized_velocities(j,1:3) * (AtoBohr/fstota)
+      if (vel_atomic .eqv. .false.) path_integral%rp(i)%initialized_velocities(j,1:3) = &
+ path_integral%rp(i)%initialized_velocities(j,1:3) * (AtoBohr/fstota)
     enddo
   enddo
   close(222)
@@ -1010,7 +989,7 @@ endif
 
 ! ---------------------------------------------- !
 ! IF NVT SIMULATION, NEED TO DETERMINE THE ----- !
-! LANG COEFFICIENT (BASED ON THE ONE INPUT ----- !
+! LANG COEFFICIENT BASED ON THE ONE INPUT ----- !
 ! PARAMETER ------------------------------------ !
 ! ---------------------------------------------- !
 if (md%ensemble == 'nvt') then
@@ -1041,12 +1020,6 @@ CALL calc_constraints(classical, path_integral, md, para_var)
 if (md%init_vel .eqv. .true. ) then 
   if (para_var%my_rank == 0) write(*,*)' ------ INITIALIZE CLASSICAL OUTER LOOP VELOCITIES------ ' 
   CALL initialize_classical_velocities(classical,path_integral,md, para_var)
-  !open(222,file='atom-vel-1.dat')
-  !do i = 1, classical%natoms
-  !  write(222,'(3d20.6)') classical%i_velocity(i,:)
-  !enddo
-  !close(222)
-  !write(*,*) 'rescale vel '
 if (para_var%my_rank == 0) write(*,*)' ------RESCALE VELOCITIES FOR TEMPERATURE, SYSTEM COM, AND CONSTRAINTS------ '
   CALL rescale_velocities(classical, path_integral, md, para_var)
   open(222,file='atom-vel.dat')
@@ -1064,12 +1037,16 @@ if (para_var%my_rank == 0) write(*,*)' ------RESCALE VELOCITIES FOR TEMPERATURE,
   enddo
   close(222)
 
+! JS OCT13
 
 else
 if (para_var%my_rank == 0) write(*,*)' ------READS IN CLASSICAL OUTER LOOP VELOCITIES FROM ATOM-VEL.DAT------'
   open(222,file='atom-vel.dat')
   do i = 1, classical%natoms
     read(222,*) classical%i_velocity(i,:)
+    if (vel_atomic .eqv. .false.) then
+      classical%i_velocity(i,:) = classical%i_velocity(i,:) * (AtoBohr/fstota)
+    endif
   enddo
   close(222)
 endif
@@ -1127,9 +1104,6 @@ real(kind=8)         ::rnd_vel
 integer              ::iatom,i, icount
 include 'mpif.h'
 
-!ALLOCATE(classical%i_velocity(classical%natoms,md%space_dim))
-!classical%i_velocity = 0.0d0
-
 
 if (para_var%my_rank == 0) then
 do iatom = 1, classical%natoms
@@ -1141,11 +1115,6 @@ do iatom = 1, classical%natoms
     !write(*,*)' classical%beta is ', classical%beta
     !write(*,*)' classical%mass is ', classical%mass(iatom)
   enddo
-  !open(222,file='atom-vel-2.dat')
-  !do i = 1, classical%natoms
-  !  write(222,'(3d20.6)') classical%i_velocity(i,:)
-  !enddo
-  !close(222)
 enddo
 if (md%fixed) then
   icount = md%n_fixed_atoms
@@ -1164,11 +1133,6 @@ if (md%fixed) then
     icount = icount - 1
   enddo
 endif
-  !open(222,file='atom-vel-1.dat')
-  !do i = 1, classical%natoms
-  !  write(222,'(3d20.6)') classical%i_velocity(i,:)
-  !enddo
-  !close(222)
 else
   classical%i_velocity(:,:) = 0.0d0
 endif
@@ -1274,105 +1238,12 @@ include 'mpif.h'
 
 
 
-!CALCULATE THE NUMBER OF CONTRAINTS IN THE SYSTEM!
-!md%n_constraints = 0 
-!x_cnst = 0
-!y_cnst = 0
-!z_cnst = 0
-!if (md%fixed) then
-!  do i = 1, path_integral%num_rp
- !   do j = 1, md%n_fixed_atoms
-!      if (md%fixed_list(j,1)==i) then 
-!        md%n_constraints = md%n_constraints + sum(md%fixed_list(j,2:md%space_dim+1))&
-!          *path_integral%rp(i)%num_beads
-!        write(*,*)' RP fixed constraint ', md%fixed_list(j,1)
-!        x_cnst = x_cnst + md%fixed_list(j,2)*path_integral%rp(i)%num_beads
-!        y_cnst = y_cnst + md%fixed_list(j,3)*path_integral%rp(i)%num_beads
-!        z_cnst = z_cnst + md%fixed_list(j,4)*path_integral%rp(i)%num_beads
-!      endif
-!    enddo
-!  enddo
-!  write(*,*) 'num path integral ', path_integral%num_rp
-!  do i = 1, classical%natoms
-!    do j = 1, md%n_fixed_atoms
-!      write(*,*) 'if state', md%fixed_list(j,1), path_integral%num_rp + i
-!      if (md%fixed_list(j,1)==path_integral%num_rp+i) then 
-!        md%n_constraints = md%n_constraints + &
-!          sum(md%fixed_list(j,2:md%space_dim+1))
-!        write(*,*)' classical constraint ', md%fixed_list(j,1)
-!        x_cnst = x_cnst + md%fixed_list(j,2)
-!        y_cnst = y_cnst + md%fixed_list(j,3)
-!        z_cnst = z_cnst + md%fixed_list(j,4)
-!      endif
-!    enddo
-!  enddo
-!endif
-!if (md%centroid) then
-!  do i = 1, md%n_centroids
-!    md%n_constraints = md%n_constraints + sum(md%centroid_list(i,2:md%space_dim+1)) 
-!      x_cnst = x_cnst + md%centroid_list(i,2)*path_integral%rp(i)%num_beads
-!      y_cnst = y_cnst + md%centroid_list(i,3)*path_integral%rp(i)%num_beads
-!      z_cnst = z_cnst + md%centroid_list(i,4)*path_integral%rp(i)%num_beads
-!  enddo
-!endif
-!if (md%virtual_site) then
-!  md%n_constraints = md%n_constraints + md%n_virtual_sites*real(dble(md%space_dim))
-!      x_cnst = x_cnst + md%n_virtual_sites
-!      y_cnst = y_cnst + md%n_virtual_sites
-!      z_cnst = z_cnst + md%n_virtual_sites
-!endif
-
-!if (x_cnst + y_cnst+z_cnst /= md%n_constraints) write(*,*)' constraints do not add up '
-!write(*,*)' number of constraints in simulation ', md%n_constraints
-!!Add 6 constraints for system if num particles > 2
-!if (classical%natoms+path_integral%total_beads > 2 ) then
-!  md%n_constraints = md%n_constraints + 6
-!else
-!  md%n_constraints = md%n_constraints + 5
-!endif
-!write(*,*)' number of constraints in simulation ', md%n_constraints
 
 call MPI_BARRIER(MPI_COMM_WORLD,ierror)
 if (para_var%my_rank == 0) then
 if ( (md%init_vel .eqv. .true.) ) then
 
   write(*,*)' ------INITIALIZE VELOCITIES------ '
-
-!write(*,*)' classical%natoms ', classical%natoms
-!write(*,*)' path_integral%total_beads ', path_integral%total_beads
-!write(*,*)' size of path_integral ', SIZE(path_integral%rp)
-!allocate(vel_array(md%space_dim*(classical%natoms+path_integral%total_beads)))
-!icount = 0
-!do irp = 1, path_integral%num_rp
-!  do i = 1, path_integral%rp(irp)%num_beads
-!    icount = icount + 1
-!    vel_array( (icount-1)*md%space_dim+1: icount*md%space_dim) = &
-!	    path_integral%rp(irp)%initialized_velocities(i,:)
-!  enddo
-!enddo
-!if (icount /= path_integral%total_beads) write(*,*)' ERROR IN VEL-ARRAY '
-!write(*,*)' done pi'
-
-!do i = 1, classical%natoms
-!  vel_array( (i-1+path_integral%total_beads)*md%space_dim+1: (i+path_integral%total_beads)*md%space_dim ) = &
-!    classical%i_velocity(i,:)
-!enddo
-!write(*,*)' done classical'
-
-
-!xmin = -0.004
-!xmax = 0.004
-!xnum = 50
-!write(*,*)' call his'
-!allocate(his(0:xnum))
-!CALL histogram(path_integral%total_beads*md%space_dim, vel_array(1:path_integral%total_beads*md%space_dim), xmin, xmax, xnum, his) 
-
-!open(199, file='his_pi_before.out')
-!delx = (xmax-xmin)/real(xnum-1)
-!do i = 0, xnum
-!  write(199,*) i, xmin + (i-1)*delx, his(i)
-!enddo
-!close(199)
 
 
   com_vel = 0.0d0
@@ -1503,13 +1374,6 @@ call MPI_BARRIER(MPI_COMM_WORLD,ierror)
     call MPI_bcast(classical%i_velocity(i,:), md%space_dim, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierror) 
   enddo
 
-!do i = 0, para_var%size_rank-1
-!  if (i == para_var%my_rank) then
-!    write(*,*)' on rank ', para_var%my_rank, ' after rescaling '
-!    write(*,*)' the velocities are ', path_integral%rp(1)%initialized_velocities(1,:)
-!  endif
-!  call MPI_BARRIER(MPI_COMM_WORLD,ierror)
-!enddo
 
 
 END SUBROUTINE rescale_velocities
@@ -1563,5 +1427,42 @@ deallocate(seed)
 
 END SUBROUTINE init_rnd_seed
 ! ----------------------------------------------------- !
+! JS OCT22 
+
+! ----------------------------------------------------- !
+! -------- Subroutine to initialize plumed ------------ !
+! ----------------------------------------------------- !
+SUBROUTINE initialize_plumed(classical, md)
+
+use f77_interface, only: f_env_type, f_env_add_defaults, f_env_rm_defaults
+use metadynamics, only: metadyn_initialise_plumed
+use simpar_types, only: simpar_type
+
+implicit none
+
+TYPE(classical_type)         :: classical
+TYPE(md_info)                :: md
+TYPE(f_env_type), pointer    :: plumed_env
+TYPE(simpar_type), target    :: simpar_data
+TYPE(simpar_type), pointer   :: simpar
+integer                      :: ierror
+
+md%plumed_active = .false.
+
+CALL f_env_add_defaults(classical%cp2k_env_flag, plumed_env)
+
+if (associated(plumed_env%force_env%meta_env)) then
+  if (plumed_env%force_env%meta_env%use_plumed) then
+    simpar => simpar_data
+    simpar%dt = md%dt
+
+    CALL metadyn_initialise_plumed(plumed_env%force_env, simpar, 0)
+    md%plumed_active = .true.
+  endif
+endif
+
+CALL f_env_rm_defaults(plumed_env, ierror)
+
+END SUBROUTINE initialize_plumed
 
 END MODULE input_setup

@@ -57,7 +57,6 @@ run_pot = 0.0d0
 run_temp = 0.0d0
 icount = 0
 if (trim(adjustl(md%print_level)) == 'high') open(801,file='forces.dat')
-!if (trim(adjustl(md%print_level)) == 'high') open(333,file='rcut_force.dat')
 if (trim(adjustl(md%print_level)) == 'high') open(802,file='trajectory_all.xyz')
 if (trim(adjustl(md%print_level)) == 'high') open(203,file='energy_actual.dat')
 !open(400,file='debug.out')
@@ -137,8 +136,7 @@ if (para_var%my_rank == 0) then
   call system_clock(count_rate=crate)
   call system_clock(itime_cstart)
 endif
-!write(333,*)' i = 0'
-CALL calc_force_cp2k(classical, path_integral, md)      !call 1 at initial config. FORCE/ENERGY  
+CALL calc_force_cp2k(classical, path_integral, md, 0)      !call 1 at initial config. FORCE/ENERGY  
 if (para_var%my_rank == 0) then
   call system_clock(itime_cend)
   open(111,file='runtime_info.dat',position='append')
@@ -193,7 +191,6 @@ do j = 1, classical%natoms
    classical%p(j,:)/(classical%mass(j)*AtoBohr/fstota)
 enddo
 
-!  write(*,*)' print forces '
   write(801,*) sum(path_integral%rp(:)%num_beads) + classical%natoms
   write(801,*)' dt = ', md%dt*(istep)/fstota
   do irp = 1, path_integral%num_rp
@@ -247,17 +244,6 @@ do istep = 1, md%nsteps
     call system_clock(count_rate=trate)
     call system_clock(itime_tstart)
   endif
-  ! ------------------------------------------------ !
-  ! BEGIN SUBROUTINE BY ZEROING OUT ALL FORCES FOR - !
-  ! BOTH PATH-INTEGRAL AND CLASSICAL DOF ----------- !
-  ! ------------------------------------------------ !
-
-!BAJ REMOVE BLOCK
-  !do irp = 1, path_integral%num_rp
-  !  path_integral%rp(irp)%force = 0.0d0
-  !enddo
-  !classical%force = 0.d0
-! -----------
 
     ! ------------------------------------------------ !
     ! IF DOING NVT SIMULATIONS, THE FIRST CALL TO THE- !
@@ -329,22 +315,13 @@ do istep = 1, md%nsteps
      ! CALCULCATE THE CONSERVED QUANTITIES (ENERGY FOR !
      ! NVE SIMULATIONS) AND PRINT TO FILE AT EACH STEP !
      ! ----------------------------------------------- !
-
-!!!! BAJ: REMOVED THIS BLOCK
-  !CALL update_force_env(classical, path_integral, md)
-  !do irp = 1, path_integral%num_rp
-  !  path_integral%rp(irp)%force = 0.0d0
-  !enddo
-  !classical%force = 0.d0
-  !CALL calc_force_cp2k(classical, path_integral, md)       !this is like the 8th call to FORCE/ENERGY Not needed
-  !CALL calc_force_pi(path_integral, md, 0)
-!!!!!
   CALL calc_total_energy(classical, path_integral, md, istep)
   
 
   ! --------------------------------------------!
   ! PRINT THE TRAJECTORY AND ENERGIES IF THE ---!
   ! PRINT FREQUENCY IS MET.---------------------!
+  ! --------------------------------------------!
   if(mod(istep,md%freq_print)==0) THEN
     if (trim(adjustl(md%print_level)) == 'high') then
       write(203,'(i10,f16.2,7f20.10)')istep, istep*md%dt/fstota,classical%kinetic,classical%potential, path_integral%kinetic, &
@@ -352,15 +329,6 @@ do istep = 1, md%nsteps
     endif
     write(204,'(i10,2f16.2,4f20.10)')istep, istep*md%dt/fstota,md%instant_temp,&
         md%kinetic_virial, md%potential_virial, md%kinetic_primitive, md%kinetic_virial+md%potential_virial
-    !if (classical%natoms+path_integral%total_beads <= 2) then
-    !  write(204,'(i5,2f16.2,4f20.10)')istep, istep*md%dt/fstota,(classical%kinetic+path_integral%kinetic)/&
-    !    ((real(md%space_dim)*(classical%natoms+path_integral%total_beads)-5)*kb/2.0d0), &
-    !    md%kinetic_virial, md%potential_virial, md%kinetic_primitive, md%kinetic_virial+md%potential_virial
-    !else 
-    !  write(204,'(i5,2f16.2,4f20.10)')istep, istep*md%dt/fstota,(classical%kinetic+path_integral%kinetic)/&
-    !    ((real(md%space_dim)*(classical%natoms+path_integral%total_beads)-(md%n_constraints))*kb/2.0d0), &
-    !    md%kinetic_virial, md%potential_virial, md%kinetic_primitive, md%kinetic_virial+md%potential_virial
-    !endif
   endif
   if (istep >= int(md%run_average)) then
     if (icount == 0) then
@@ -368,8 +336,6 @@ do istep = 1, md%nsteps
       run_pot = md%potential_virial
       run_tot = md%kinetic_virial+md%potential_virial
       run_temp = md%instant_temp
-      !run_temp = (classical%kinetic+path_integral%kinetic)/((real(md%space_dim)*&
-      !    (classical%natoms+path_integral%total_beads-1))*kb/2.0d0)
       icount = icount + 1
       if(mod(istep,md%freq_print)==0) write(205,'(i10,2f16.2,3f20.10)')istep, istep*md%dt/fstota,run_temp, run_kin, run_pot, run_tot
     else
@@ -383,7 +349,7 @@ do istep = 1, md%nsteps
   endif
 
      ! ----------------------------------------------- !
-     ! BASED UPONNTHE INPUT FREQ_PRINT, WE WILL SAVE- !
+     ! BASED UPONNTHE INPUT FREQ_PRINT, WE WILL SAVE - !
      ! THE CLASSICAL AND RP POSITIONS IN A TRAJECTORY- !
      ! VARIABLE IF PRINT_LEVEL IS HIGH --------------- ! 
      ! ----------------------------------------------- !
@@ -518,7 +484,6 @@ do istep = 1, md%nsteps
   endif
 enddo
 if (trim(adjustl(md%print_level)) == 'high') close(801)
-!if (trim(adjustl(md%print_level)) == 'high') close(333)
 close(675)
 close(676)
 close(677)
@@ -565,24 +530,6 @@ if (para_var%my_rank == 0) then
   close(111)
 endif
 
-!if (trim(adjustl(md%print_level)) == 'high') then
-!writes the trajectory file
-!  do irp = 1, path_integral%num_rp
-!    open(201,file='trajectory_pimd_'//char(irp+48)//'.xyz')
-!    write(*,*)' print the md traj file '
-!    do i = 0, md%nsteps/md%freq_print
-!      write(201,*) path_integral%rp(irp)%num_beads
-!      write(201,*)' i = ', i
-!      do j = 1, path_integral%rp(irp)%num_beads
-!        write(201,'(a2, 6f15.8)') trim(path_integral%rp(irp)%particle_label(j)), path_integral%rp(irp)%traj(i,j,1:3)/AtoBohr, &
-!            path_integral%rp(irp)%traj(i,j,4:6)/(AtoBohr)
-!      enddo
-!    enddo
-!    close(201) 
-!  enddo
-!endif
-
-
 END SUBROUTINE run_md
 ! ----------------------------------------------------!
 
@@ -605,21 +552,17 @@ do irp = 1, path_integral%num_rp
   do i = 1, path_integral%rp(irp)%num_beads
     icount = icount+1
     positions( (icount-1)*md%space_dim+1: icount*md%space_dim) = path_integral%rp(irp)%x(i,:)
-    !velocities( (icount-1)*md%space_dim+1: icount*md%space_dim) = path_integral%rp(irp)%p(i,:)/path_integral%rp(irp)%kinetic_mass
   enddo
 enddo
 if (icount /= path_integral%total_beads) WRITE(*,*)' ERROR IN FORCE UPDATE ENV PI INDEX '
 do i = 1, classical%natoms
   positions( (i-1+path_integral%total_beads)*md%space_dim+1: (i+path_integral%total_beads)*md%space_dim ) = &
     classical%x(i,1:md%space_dim) 
-  !velocities( (i-1+path_integral%total_beads)*md%space_dim+1: (i+path_integral%total_beads)*md%space_dim ) = &
-  !  classical%p(i,1:md%space_dim)/classical%mass(i)
 enddo
 
 call MPI_BARRIER(MPI_COMM_WORLD,ierror)
 CALL cp2k_set_positions(classical%cp2k_env_flag,positions,md%space_dim*(classical%natoms+path_integral%total_beads)) 
 call MPI_BARRIER(MPI_COMM_WORLD,ierror)
-!CALL cp2k_set_velocities(classical%cp2k_env_flag,velocities,md%space_dim*(classical%natoms+path_integral%total_beads))
 
 END SUBROUTINE update_force_env
 
@@ -660,13 +603,6 @@ md%kinetic_virial = kinetic_virial
 md%potential_virial = cp2k_pot
 md%instant_temp = (cp2k_kin + pimd_kin)/(dble(real(md%space_dim)*&
    (classical%natoms+path_integral%total_beads)-(md%n_constraints))*kb/2.0d0)
-!write(400,*)' cp2k kin is ', cp2k_kin
-!write(400,*)' PI kin is ', pimd_kin
-!write(400,*)' space_dimen is ', md%space_dim
-!write(400,*)' total particles is ', classical%natoms + path_integral%total_beads
-!write(400,*)' md%n_constraints is ', md%n_constraints
-!write(400,*)' kb/2 is ', kb/20d0
-!write(400,*)' instant temp is ', md%instant_temp
 
 END SUBROUTINE calc_total_energy
 
@@ -683,7 +619,7 @@ integer               ::i, ierror
 include 'mpif.h'
 
 CALL cp2k_get_potential_energy(classical%cp2k_env_flag, pot_energy)
-!write(*,*)'classical potential energy is ', pot_energy
+
 ! --------------------------------------------- !
 ! WOULD EVENTUALLY LIKE TO HAVE A CALL -------- !
 ! TO INTERNAL CP2K FUNCTION CP2K_GET_ENERGY --- !
@@ -721,36 +657,21 @@ do irp = 1, path_integral%num_rp
     centroid(i) = sum(path_integral%rp(irp)%x(:,i))&
     /dble(real(path_integral%rp(irp)%num_beads))
   enddo
-  !do i = 1, nbead
-!	  bead_term_local = bead_term_local + dot_product(path_integral%rp(irp)%x(i,:)-centroid(:),&
-!            (-1.0d0*path_integral%rp(irp)%force(i,:)))
-!	  !write(*,*)' dot product is ', dot_product(path_integral%rp(irp)%x(i,:)-centroid(:),path_integral%rp(irp)%force(i,:))
-!  enddo
   do i = 1, nbead
     do j = 1, md%space_dim
       bead_term = bead_term - ((path_integral%rp(irp)%x(i,j)-centroid(j))*&
             path_integral%rp(irp)%force(i,j))/(2.0d0)  !*dble(real(nbead)))
-    !write(*,*)' dot product is ', dot_product(path_integral%rp(irp)%x(i,:)-centroid(:),path_integral%rp(irp)%force(i,:))
     enddo
   enddo
-  !write(*,*)' bead_term_local is ', bead_term_local
-  !bead_term = bead_term + bead_term_local/(2.0d0*dble(real(nbead)))
 enddo
 
-!write(*,*)' bead_term is ', bead_term
-  
+
 if (path_integral%num_rp > 0) then 
   extra_term = dble(real(md%space_dim))*dble(real(classical%natoms + path_integral%num_rp))&  !- md%n_constraints))&
     /(2.0d0*path_integral%rp(1)%beta)
-  !extra_term = dble(real(md%space_dim))*dble(real(classical%natoms + path_integral%num_rp))/(2.0d0*path_integral%rp(1)%beta)
 else
   extra_term = dble(real(md%space_dim))*dble(real(classical%natoms - md%n_constraints))/(2.0d0*classical%beta)
 endif
-
-!write(*,*)' extra_term is ', extra_term
-
-!write(400,*)' extra term is ', extra_term
-!write(400,*)' bead term is ', bead_term
 
 kinetic_virial = bead_term + extra_term
 
@@ -784,20 +705,15 @@ do irp = 1, path_integral%num_rp
 enddo
 
 if (path_integral%num_rp > 0) then 
-  !extra_term = dble(3.0d0*real(path_integral%total_beads + classical%natoms-md%n_constraints))/(2.0d0*path_integral%rp(1)%beta)
   extra_term = dble(3.0d0*real(path_integral%total_beads + classical%natoms))/(2.0d0*path_integral%rp(1)%beta)
-  !extra_term = dble(3.0d0*real(path_integral%total_beads + classical%natoms))/(2.0d0*path_integral%rp(1)%beta)
 else
   extra_term = dble(real(3.0d0*classical%natoms-md%n_constraints))/(2.0d0*classical%beta)
 endif
 
-!write(400,*)' primitive extra term is ', extra_term
-!write(400,*)' primitive bead term is ', pot_energy
 total_energy = pot_energy + extra_term     !BAJ: March27 made change above to include
                                                            !constraint and
                                                            !space_dim
                                                            !information. 
-!total_energy = classical_pot - pot_energy + extra_term
 
 
 END SUBROUTINE primitive_kinetic_energy_estimator
@@ -815,8 +731,6 @@ integer               ::irp,i,iplus,nbead
 pot_energy = 0.0d0
 kin_energy = 0.0d0
 do irp = 1, path_integral%num_rp
-  !omega = 1.0d0/path_integral%rp(irp)%beta
-  !omega = dsqrt(dble(real(path_integral%rp(irp)%num_beads)))/path_integral%rp(irp)%beta
   omega = ((dble(real(path_integral%rp(irp)%num_beads)))/path_integral%rp(irp)%beta)&
         *dsqrt(path_integral%rp(irp)%harm_mass/path_integral%rp(irp)%kinetic_mass)
   nbead = path_integral%rp(irp)%num_beads
@@ -826,9 +740,6 @@ do irp = 1, path_integral%num_rp
     pot_energy = pot_energy + 0.5d0*path_integral%rp(irp)%kinetic_mass*omega**2 * &      !BAJ: Feb8 made change
       dot_product(path_integral%rp(irp)%x(i,:)-path_integral%rp(irp)%x(iplus,:),&
       path_integral%rp(irp)%x(i,:)-path_integral%rp(irp)%x(iplus,:))
-    !write(*,*)' prefactor is ', 0.5d0*path_integral%rp(irp)%harm_mass*omega**2/dble(path_integral%rp(irp)%num_beads) 
-    !write(*,*)' dot product is ', dot_product(path_integral%rp(irp)%x(i,:)-path_integral%rp(irp)%x(iplus,:),&
-    !  path_integral%rp(irp)%x(i,:)-path_integral%rp(irp)%x(iplus,:))
     kin_energy = kin_energy + 0.5d0*dot_product(path_integral%rp(irp)%p(i,:),path_integral%rp(irp)%p(i,:))/&
       (path_integral%rp(irp)%kinetic_mass)
   enddo
@@ -838,7 +749,7 @@ END SUBROUTINE calc_pimd_energy
 
 
 ! ---------------------------------------------- !
-! The velocity-verlet interrator for the ------- !
+! The velocity-verlet integrator for the ------- !
 ! classical atoms with a time-step of dt ------- !
 ! The following updates occur:  ---------------- !
 ! p(t + dt/2) <- p(t) + dt/2 * F(t) ------------ !
@@ -854,16 +765,6 @@ TYPE(md_info)           ::md
 real(kind=8)            ::dt
 integer                 ::irp,i, j, step
 
-!classical%force = 0.0d0
-!do irp = 1, path_integral%num_rp
-!  path_integral%rp(irp)%force = 0.0d0
-!enddo
-
-!BAJ: REMOVE THIS BLOCK
-!CALL update_force_env(classical, path_integral, md)
-!CALL calc_force_cp2k(classical, path_integral, md)       !Not Needed (5th or so) call to FORCE/ENERGY   not needed
-!CALL calc_force_pi(path_integral, md, 0)
-!--------
 
 CALL update_pi_p(path_integral, dt)
 CALL update_pi_x(path_integral, md, dt)
@@ -874,7 +775,7 @@ do irp = 1, path_integral%num_rp
   path_integral%rp(irp)%force = 0.0d0
 enddo
 CALL update_force_env(classical, path_integral, md)
-CALL calc_force_cp2k(classical, path_integral, md)      !6th call to FORCE/ENERGY      needed
+CALL calc_force_cp2k(classical, path_integral, md, step)      !6th call to FORCE/ENERGY      needed
 CALL calc_force_pi(path_integral, md, 0)
 
 
@@ -883,7 +784,7 @@ CALL update_pi_p(path_integral, dt)
 END SUBROUTINE vv_update_pi
 
 ! ---------------------------------------------- !
-! The velocity-verlet interrator for the ------- !
+! The velocity-verlet integrator for the ------- !
 ! classical atoms with a time-step of dt ------- !
 ! The following updates occur:  ---------------- !
 ! p(t + dt/2) <- p(t) + dt/2 * F(t) ------------ !
@@ -901,6 +802,7 @@ real(kind=8)            ::dt
 integer                 ::irp,i, j, step
 integer         ::crate, itime_cstart, itime_cend
 
+
 CALL update_classical_p(classical, dt)                      
 CALL update_classical_x(classical, dt)
 
@@ -910,7 +812,7 @@ do irp = 1, path_integral%num_rp
   path_integral%rp(irp)%force = 0.0d0
 enddo
 CALL update_force_env(classical, path_integral, md)        
-CALL calc_force_cp2k(classical, path_integral, md)            !call 3 (after moving classical atoms) FORCE/ENERGY NEEDED
+CALL calc_force_cp2k(classical, path_integral, md, step)            !call 3 (after moving classical atoms) FORCE/ENERGY NEEDED
 CALL calc_force_pi(path_integral, md, 0)
 
 
@@ -919,7 +821,7 @@ CALL update_classical_p(classical, dt)
 END SUBROUTINE vv_update_classical
 ! ---------------------------------------------- !
 
-! JS OCT22 Changed to record time correctly
+! JS OCT6
 ! ---------------------------------------------- !
 ! The velocity-verlet integrator for the ------- !
 ! classical atoms and RPs. One new CP2K  ------- !
@@ -942,7 +844,7 @@ record_time = step <= md%print_step .and. para_var%my_rank == 0
 ! first half momentum update using stored forces for both classical and rp
 CALL update_all_p(classical, path_integral, dt)
 
-! Classical/RP position update
+! classical/RP position update
 if (path_integral%num_rp > 0) then
   select case (trim(md%propagation))
   case ('normal_manual')
@@ -985,7 +887,7 @@ if (record_time) then
   CALL system_clock(itime_cstart)
 endif
 
-CALL calc_force_cp2k(classical,path_integral,md)
+CALL calc_force_cp2k(classical,path_integral,md, step)
 
 if (record_time) then
   CALL system_clock(itime_cend)
@@ -1003,11 +905,13 @@ CALL update_all_p(classical, path_integral, dt)
 
 END SUBROUTINE vv_update_joint
 
+! JS OCT 22 
 ! ---------------------------------------------- !
 ! Subroutine that evaluates the forces on the -- !
 ! classical atoms using the CP2K subroutines --- !
+! Also calculates plumed when appropriate ------ !
 ! ---------------------------------------------- !
-SUBROUTINE calc_force_cp2k(classical, path_integral, md)
+SUBROUTINE calc_force_cp2k(classical, path_integral, md, step)
 use libcp2k
 implicit none
 
@@ -1015,7 +919,7 @@ TYPE(classical_type)                     ::classical
 TYPE(path_integral_env)                  ::path_integral
 TYPE(md_info)                            ::md
 real(kind=8),allocatable,dimension(:)    ::force
-integer                                  ::i, irp, icount, ierror
+integer                                  ::i, irp, icount, ierror, step
 
 include 'mpif.h'
 
@@ -1031,6 +935,9 @@ force = 0.0d0
 call MPI_BARRIER(MPI_COMM_WORLD,ierror)
 CALL cp2k_calc_energy_force(classical%cp2k_env_flag)
 call MPI_BARRIER(MPI_COMM_WORLD,ierror)
+if (md%plumed_active) then
+  CALL calculate_plumed(classical, step)
+endif
 CALL cp2k_get_forces(classical%cp2k_env_flag, force, (classical%natoms+path_integral%total_beads)*md%space_dim)
 
 ! ------------------------------------------------ !
@@ -1080,22 +987,17 @@ character(len=2)                         ::match_type
 do irp = 1, path_integral%num_rp
   if (path_integral%rp(irp)%charge > 0.0d0) then 
     match_type = path_integral%rp(irp)%particle_label(1)(len(trim(path_integral%rp(irp)%particle_label(1)))-1:)
-    !write(*,*)' match_type is ', match_type
     location = 0
     do i = 1, SIZE(md%xx_types)
       if (md%xx_types(i) == match_type) then
         location = i
       endif
     enddo
-    !write(*,*) 'location is ', location
-      !if (location == 0) write(*,*) "ERROR IN RCUT LIST"
     if (location > 0) then
-    !write(333,*)' initial QP force is ', path_integral%rp(irp)%force(1,:)
     do ixx = 1, path_integral%rp(md%xx_atom_num)%num_beads
       dist_vec(:) = path_integral%rp(md%xx_atom_num)%x(ixx,:) - path_integral%rp(irp)%centroid(:)
       dist = dsqrt(dot_product(dist_vec, dist_vec))
       if (dist < md%xx_rcut(location)) then
-          !write(999,*)' update forces for PI', irp
         do ibead = 1, path_integral%rp(irp)%num_beads
           dist_vec(:) = path_integral%rp(md%xx_atom_num)%x(ixx,:) - path_integral%rp(irp)%x(ibead,:)
           dist = dsqrt(dot_product(dist_vec, dist_vec))
@@ -1108,7 +1010,6 @@ do irp = 1, path_integral%num_rp
         enddo
       else
         if (.NOT. md%xx_exclude(location)) then
-          !write(*,*)' Add in force '
           do ibead = 1, path_integral%rp(irp)%num_beads
             dist_vec(:) = path_integral%rp(md%xx_atom_num)%x(ixx,:) - path_integral%rp(irp)%x(ibead,:)
             dist = dsqrt(dot_product(dist_vec, dist_vec))
@@ -1120,7 +1021,6 @@ do irp = 1, path_integral%num_rp
         endif
       endif
     enddo
-    !write(333,*)' new QP force is ', path_integral%rp(irp)%force(1,:)
     endif
   endif
 enddo
@@ -1133,13 +1033,11 @@ do iclassical = 1, classical%natoms
         location = i
       endif
     enddo
-    !write(*,*) 'location is ', location
     if (location > 0) then
       do ixx = 1, path_integral%rp(md%xx_atom_num)%num_beads
         dist_vec(:) = path_integral%rp(md%xx_atom_num)%x(ixx,:) - classical%x(iclassical,:)
         dist = dsqrt(dot_product(dist_vec, dist_vec))
         if (dist < md%xx_rcut(location)) then
-        !write(999,*)' update forces for classical ', iclassical
           force(:) = ((path_integral%rp(md%xx_atom_num)%charge * classical%ff_atom_charges(iclassical)) &
             /dist**2) * (dist_vec(:)/dist)
           if (md%xx_exclude(location)) then
@@ -1173,8 +1071,6 @@ character(len=2)                         ::match_type
 
 
 do irp = 1, path_integral%num_rp
-  !if (trim(path_integral%rp(irp)%particle_label(1) &
-  !  (len(trim(path_integral%rp(irp)%particle_label(1)))-1:)) == ANY(md%xx_types(:))) then
   if (path_integral%rp(irp)%charge > 0.0d0) then
     match_type = path_integral%rp(irp)%particle_label(1)(len(trim(path_integral%rp(irp)%particle_label(1)))-1:)
     location = 0
@@ -1183,7 +1079,6 @@ do irp = 1, path_integral%num_rp
         location = i
       endif
     enddo
-    !write(*,*) 'location is ', location
     if (location > 0) then
       do ixx = 1, path_integral%rp(md%xx_atom_num)%num_beads
         dist_vec(:) = path_integral%rp(md%xx_atom_num)%x(ixx,:) - path_integral%rp(irp)%centroid(:)
@@ -1205,7 +1100,6 @@ do irp = 1, path_integral%num_rp
           enddo
         else
           if (.NOT. md%xx_exclude(location)) then
-            !write(*,*)' Add in energy '
             do ibead = 1, path_integral%rp(irp)%num_beads
               dist_vec(:) = path_integral%rp(md%xx_atom_num)%x(ixx,:) - path_integral%rp(irp)%x(ibead,:)
               dist = dsqrt(dot_product(dist_vec, dist_vec))
@@ -1220,8 +1114,6 @@ do irp = 1, path_integral%num_rp
   endif
 enddo
 do iclassical = 1, classical%natoms
-  !if (trim(classical%atom_kinds(iclassical)) == ANY(md%xx_types(:))) then
-  !if (ANY(trim(classical%atom_kinds(iclassical)) == md%xx_types(:))) then
   if (classical%ff_atom_charges(iclassical) > 0.0d0) then
     match_type = classical%atom_kinds(iclassical)
     location = 0
@@ -1230,13 +1122,12 @@ do iclassical = 1, classical%natoms
         location = i
       endif
     enddo
-    !write(*,*) 'location is ', location
     if (location > 0) then
       do ixx = 1, path_integral%rp(md%xx_atom_num)%num_beads
         dist_vec(:) = path_integral%rp(md%xx_atom_num)%x(ixx,:) - classical%x(iclassical,:)
         dist = dsqrt(dot_product(dist_vec, dist_vec))
-        if (dist < md%xx_rcut(location)) then
         ! JS OCT 15 removed square factor in denominator
+        if (dist < md%xx_rcut(location)) then
           if (md%xx_exclude(location)) then
             pot = - ((path_integral%rp(md%xx_atom_num)%charge * classical%ff_atom_charges(iclassical)) &
               /dist) + ((path_integral%rp(md%xx_atom_num)%charge * classical%ff_atom_charges(iclassical)) &
@@ -1254,6 +1145,11 @@ enddo
 
 END SUBROUTINE calc_xx_energy
 
+! ---------------------------------------------- !
+! - Subroutine that might add the bead spring -- !
+! - calculation on the ring-polymer beads and -- !
+! - then calculates constraint centroid forces.  !
+! ---------------------------------------------- !
 
 SUBROUTINE calc_force_pi(path_integral, md, flag)
 implicit none
@@ -1320,10 +1216,6 @@ do irp = 1, path_integral%num_rp
       /path_integral%rp(irp)%beta**2) &     !CHECK!!!
       *(2.0d0*path_integral%rp(irp)%x(ibead,:) - path_integral%rp(irp)%x(ibead_minus,:) &
       - path_integral%rp(irp)%x(ibead_plus,:) )
-    !path_integral%rp(irp)%force(ibead,:) = path_integral%rp(irp)%force(ibead,:) &    !BAJ: Feb8 Made these changes
-    !  - path_integral%rp(irp)%kinetic_mass * omega**2&     !CHECK!!!
-    !  *(2.0d0*path_integral%rp(irp)%x(ibead,:) - path_integral%rp(irp)%x(ibead_minus,:) &
-    !  - path_integral%rp(irp)%x(ibead_plus,:) )
   enddo
 enddo
 
@@ -1424,6 +1316,10 @@ real(kind=8)          :: dt
 integer               :: irp,icount,i, j
 integer         ::crate, itime_cstart, itime_cend
 
+
+
+
+
 CALL update_pi_p(path_integral, dt)
     if (icount <= md%print_step .and. para_var%my_rank == 0) then
       call system_clock(count_rate=crate)
@@ -1432,14 +1328,10 @@ CALL update_pi_p(path_integral, dt)
 
 CALL manual_normal_rotation(path_integral)
 
-!write(*,*)' transform cart to normal '
 CALL manual_cart_to_normal(path_integral, md, icount)
 
-!write(*,*)' update'
 CALL update_normal_coord(path_integral, md, dt)
-!CALL update_pimd_x(path_integral, dt)
 
-!write(*,*)' transform normal to cart '
 CALL manual_normal_to_cart(path_integral, md, icount)
     if (icount <= md%print_step .and. para_var%my_rank == 0) then
       call system_clock(itime_cend)
@@ -1459,14 +1351,14 @@ classical%force = 0.0d0
 do irp = 1, path_integral%num_rp
   path_integral%rp(irp)%force = 0.0d0
 enddo
-!write(*,*)' calc_force_mix BAJ error'
+
 CALL update_force_env(classical, path_integral, md)      !5th call to calculcate FORCE/ENERGY needed
     if (icount <= md%print_step .and. para_var%my_rank == 0) then
       call system_clock(count_rate=crate)
       call system_clock(itime_cstart)
     endif
-!write(333,*)' i = ', icount 
-CALL calc_force_cp2k(classical, path_integral, md)
+
+CALL calc_force_cp2k(classical, path_integral, md, icount)
     if (icount <= md%print_step .and. para_var%my_rank == 0) then
       call system_clock(itime_cend)
       open(111,file='runtime_info.dat',position='append')
@@ -1475,6 +1367,7 @@ CALL calc_force_cp2k(classical, path_integral, md)
 CALL calc_force_pi(path_integral, md, 0)
 
 CALL update_pi_p(path_integral, dt)
+
 
 END SUBROUTINE vv_update_pi_normal_manual
 
@@ -1665,6 +1558,7 @@ endif
 
 END SUBROUTINE propagate_all_x
 
+
 ! --------------------------------------------- !
 ! Subroutine that updates the momentum of the - !
 ! path integral beads using the --------------- !
@@ -1717,17 +1611,8 @@ do irp = 1, path_integral%num_rp
     endif
   enddo
 
-  !open(888,file='rotation_matrix.dat')
-  !do i = 1, nbeads
-  !  write(888,'(100f10.2)') rot_matrix(i,:)
-  !enddo
-  !close(888)
-
   path_integral%rp(irp)%rot_matrix = rot_matrix
   deallocate(rot_matrix)
-  !do i_dim = 1, md%space_dim
-  !  path_integral%rp(irp)%p(:,i_dim) = path_integral%rp(irp)%norm_p(:,i_dim)*rot_matrix(
-  !MATRIX MUTLIPLICATION TO PROPOGATE THE NORMAL MODE COORDINATES.I
 enddo
 
 END SUBROUTINE manual_normal_rotation
@@ -1740,14 +1625,6 @@ TYPE(md_info)             ::md
 integer            ::irp,ispace
 integer            ::j,k, i
 integer            ::istep
-
-!if (istep==1) then
-  !open(777,file='rot_matrix_check.dat')
-  !do i = 1, path_integral%rp(1)%num_beads
-  !  write(777,'(100f12.4)') path_integral%rp(1)%rot_matrix(i,:)
-  !enddo
-  !close(777)
-!endif
 
 do irp = 1, path_integral%num_rp
   path_integral%rp(irp)%norm_p = 0.0d0
@@ -1780,11 +1657,6 @@ real(kind=8),dimension(2)      ::old_norm, new_norm
 
 
 do irp = 1, path_integral%num_rp
-  !omega_n = (path_integral%rp(irp)%harm_mass/dble(path_integral%rp(irp)%num_beads))/(path_integral%rp(irp)%betaN**2*path_integral%rp(irp)%num_beads)   !CHECK!!
-  !omega_n = dsqrt(path_integral%rp(irp)%num_beads/(path_integral%rp(irp)%betaN))   !CHECK!!
-  !BAJ EDIT on FEB 27. CHECK!
-  !omega_n = dsqrt(path_integral%rp(irp)%harm_mass/(path_integral%rp(irp)%kinetic_mass*&
-  !  dble(path_integral%rp(irp)%num_beads)))/path_integral%rp(irp)%betaN
   omega_n = (dble(real(path_integral%rp(irp)%num_beads))/path_integral%rp(irp)%beta)&
         *dsqrt(path_integral%rp(irp)%harm_mass/path_integral%rp(irp)%kinetic_mass)
   nbeads = path_integral%rp(irp)%num_beads
@@ -1825,13 +1697,6 @@ TYPE(md_info)             ::md
 integer              ::irp,ispace
 integer              ::j,k, i
 integer              ::istep
-!if (istep==1) then
-!  open(777,file='rot_matrix_check_2.dat')
-!  do i = 1, path_integral%rp(1)%num_beads
-!    write(777,'(100f12.4)') path_integral%rp(1)%rot_matrix(i,:)
-!  enddo
-!  close(777)
-!endif
 
 do irp = 1, path_integral%num_rp
   path_integral%rp(irp)%p = 0.0d0
@@ -2062,13 +1927,8 @@ root = 0
 call MPI_BARRIER(MPI_COMM_WORLD,ierror)
   do i = 1, path_integral%num_rp
     do j = 1, path_integral%rp(i)%num_beads
-      !do k = 1, md%space_dim
-      !write(*,*)' i, j, ', i, j, para_var%my_rank
-      !write(*,*)' value ', path_integral%rp(i)%initialized_velocities(j,:)
       call MPI_bcast(path_integral%rp(i)%p(j,1:md%space_dim), md%space_dim, MPI_DOUBLE_PRECISION,root, &
         MPI_COMM_WORLD, ierror)
-      !write(*,*)' value ', path_integral%rp(i)%initialized_velocities(j,:)
-      !enddo
       call MPI_BARRIER(MPI_COMM_WORLD,ierror)
     enddo
   enddo
@@ -2076,13 +1936,6 @@ call MPI_BARRIER(MPI_COMM_WORLD,ierror)
     call MPI_bcast(classical%p(i,:), md%space_dim, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierror) 
   enddo
 
-!do i = 0, para_var%size_rank-1
-!  if (i == para_var%my_rank) then
-!    write(*,*)' on rank ', para_var%my_rank, ' after rescaling '
-!    write(*,*)' the velocities are ', path_integral%rp(1)%p(1,:)
-!  endif
-!  call MPI_BARRIER(MPI_COMM_WORLD,ierror)
-!enddo
 
 
 
@@ -2190,27 +2043,14 @@ root = 0
 call MPI_BARRIER(MPI_COMM_WORLD,ierror)
   do i = 1, path_integral%num_rp
     do j = 1, path_integral%rp(i)%num_beads
-      !do k = 1, md%space_dim
-      !write(*,*)' i, j, ', i, j, para_var%my_rank
-      !write(*,*)' value ', path_integral%rp(i)%initialized_velocities(j,:)
       call MPI_bcast(path_integral%rp(i)%p(j,1:md%space_dim), md%space_dim, MPI_DOUBLE_PRECISION,root, &
         MPI_COMM_WORLD, ierror)
-      !write(*,*)' value ', path_integral%rp(i)%initialized_velocities(j,:)
-      !enddo
       call MPI_BARRIER(MPI_COMM_WORLD,ierror)
     enddo
   enddo
   do i = 1, classical%natoms
     call MPI_bcast(classical%p(i,:), md%space_dim, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierror) 
   enddo
-
-!do i = 0, para_var%size_rank-1
-!  if (i == para_var%my_rank) then
-!    write(*,*)' on rank ', para_var%my_rank, ' after rescaling '
-!    write(*,*)' the velocities are ', path_integral%rp(1)%p(1,:)
-!  endif
-!  call MPI_BARRIER(MPI_COMM_WORLD,ierror)
-!enddo
 
 
 
@@ -2252,5 +2092,26 @@ grnd = z0*sig + x
 END SUBROUTINE rnd_gauss
 ! ------------------------------------------------- !
 
+! JS OCT22 
+! ----------------------------------------------------- !
+! - Subroutine to calculate plumed, obtains CP2K's env- !
+! - and calls existing PLUMED interface, which passes - !
+! - step number and coordinates to PLUMED to do calc -- !
+! ------- then adds bias forces to CP2K's arrays ------ !
+! ----------------------------------------------------- !
+SUBROUTINE calculate_plumed(classical, step)
+use f77_interface, only: f_env_type, f_env_add_defaults, f_env_rm_defaults
+use metadynamics, only: metadyn_integrator
+implicit none
+
+TYPE(classical_type)            :: classical
+TYPE(f_env_type), pointer       :: plumed_env
+integer                         :: step, ierror
+
+CALL f_env_add_defaults(classical%cp2k_env_flag, plumed_env)
+CALL metadyn_integrator(plumed_env%force_env, step)
+CALL f_env_rm_defaults(plumed_env, ierror)
+
+END SUBROUTINE calculate_plumed
 
 END MODULE md_run

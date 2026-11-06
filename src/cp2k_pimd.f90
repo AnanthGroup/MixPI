@@ -44,10 +44,6 @@ include 'mpif.h'
 ! ------------------------------------------- !
 !initalize and read in the classical atom 
 !variables.
-!if (trim(md%obtain_force) == 'cp2k') then
-  !write(*,*)' GO '
-  ! ----------------------------------- !
-  ! set up CP2K
   CALL set_up_cp2k(para_var)
   write(*,*)' my rank is ', para_var%my_rank, ' out of ', para_var%size_rank, ' cp2k_pimd.f '
   if (para_var%my_rank == 0) then
@@ -64,10 +60,10 @@ include 'mpif.h'
   CALL read_in_md(md, para_var)
 ! ------------------------------------------- !
   ! ----------------------------------- !
+  ! JS OCT 22 Added plumed initialize
   CALL cp2k_pimd_initialize(path_integral, classical, md, para_var)
-!else
-!  write(*,*)' this obtain force option is not currently supported '
-!endif
+
+  CALL initialize_plumed(classical, md)
 ! ------------------------------------------- !
 if (para_var%my_rank == 0) then
   call system_clock(itime_setup)
@@ -81,7 +77,18 @@ endif
 !call the pimd md routine.
 !this will conduct a MD run for the ring polymer
 !and classical atoms (if present).
+! JS OCT22 Added plumed finalize
+
 CALL run_md(classical, path_integral, md, para_var)
+
+block
+  use metadynamics, only: metadyn_finalise_plumed
+
+  if (md%plumed_active) then
+    CALL metadyn_finalise_plumed()
+  endif
+end block
+
 ! ------------------------------------------- !
 
 
@@ -90,14 +97,14 @@ CALL run_md(classical, path_integral, md, para_var)
 ! ------------------------------------------- !
 ! if used classical atoms, deallocate all required
 ! arrays.
-!if (trim(md%obtain_force) == 'cp2k') then
+
   CALL classical_atom_destroy(classical)
   ! ------------------------------------------- !
   !deallocates all cp2k arrays and removes the 
   !force_env information.
     CALL destroy_cp2k
   ! ------------------------------------------- !
-!endif
+
 ! ------------------------------------------- !
 
 

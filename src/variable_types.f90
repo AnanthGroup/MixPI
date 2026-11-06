@@ -91,6 +91,7 @@ TYPE md_info
   LOGICAL,ALLOCATABLE,DIMENSION(:)                   ::xx_exclude
   INTEGER                                            ::xx_atom_num
   INTEGER                                            ::run_average
+  LOGICAL                                            ::plumed_active = .false.
 END TYPE md_info
 
 TYPE classical_type
