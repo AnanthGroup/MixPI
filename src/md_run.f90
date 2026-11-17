@@ -1475,6 +1475,9 @@ CALL calc_force_cp2k(classical, path_integral, md)
 CALL calc_force_pi(path_integral, md, 0)
 
 CALL update_pi_p(path_integral, dt)
+if (classical%natoms > 0) then
+  CALL update_classical_p(classical, dt)                      
+endif
 
 END SUBROUTINE vv_update_pi_normal_manual
 
